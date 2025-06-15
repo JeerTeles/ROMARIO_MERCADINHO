@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
+</head>
+<body>
+    <div class="menu-wrapper">
+        <nav class="menu-nav">
+            <a href="index.html" class="menu-item home-item">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="cadastro.html" class="menu-item cadastro-item">
+                <i class="fas fa-user-plus"></i> Cadastro
+            </a>
+            <a href="consulta.html" class="menu-item consulta-item">
+                <i class="fas fa-search"></i> Consulta
+            </a>
+            <a href="adicionarProdutos.html" class="menu-item adicionar-produtos-item">
+                <i class="fas fa-cart-plus"></i> Adicionar Produtos
+            </a>
+            <a href="#" class="menu-item estoque-item">
+                <i class="fas fa-box"></i> Estoque
+            </a>
+        </nav>
+    </div>
+    <div class="container">
+        <div class="registration-form">
+            <h2>Adicionar/Editar Item no Estoque</h2>
+            <input type="text" id="produtoNome" placeholder="Nome do Produto">
+            <input type="number" id="produtoQuantidade" placeholder="Quantidade" min="0">
+            <input type="number" id="produtoPrecoCompra" placeholder="Preço de Compra" min="0" step="0.01">
+            <input type="number" id="produtoPrecoVenda" placeholder="Preço de Venda" min="0" step="0.01">
+            <button id="addItemBtn">Adicionar Item ao Estoque</button>
+        </div>
+
+        <div class="records-table">
+            <h2>Itens em Estoque</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Compra</th>
+                        <th>Preço Venda</th>
+                        <th>Editar</th>
+                        <th>Excluir</th>
+                    </tr>
+                </thead>
+                <tbody id="estoqueBody">
+                    <tr>
+                        <td colspan="7" id="noEstoqueFound">Nenhum item no estoque</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/public/js/estoque.js"></script> </body>
+</html>
