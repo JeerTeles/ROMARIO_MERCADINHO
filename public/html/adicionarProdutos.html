@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta</title>
+    <title>Adicionar Produtos/Vendas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/public/css/styles.css">
 </head>
@@ -29,33 +29,47 @@
     </div>
     <div class="container">
         <div class="registration-form">
-            <h2>Pesquisar Cliente por CPF</h2>
-            <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
-            <button id="searchBtn">Pesquisar</button>
-            <div id="searchResult"></div>
+            <h2>Registrar Produtos para Cliente</h2>
+
+            <input type="text" id="cpfClienteProduto" placeholder="CPF do Cliente">
+            <input type="text" id="nomeClienteExibicao" placeholder="Nome do Cliente" readonly>
+            <input type="tel" id="telefoneClienteExibicao" placeholder="Telefone do Cliente" readonly>
+            <p id="clientStatusMessage" style="font-size: 0.9em; margin-top: -10px; margin-bottom: 10px;"></p>
+
+            <hr>
+
+            <h2>Detalhes do Produto/Item</h2>
+            <input type="text" id="nomeItem" placeholder="Nome do Item">
+            <input type="number" id="quantidadeItem" placeholder="Quantidade" min="1" value="1">
+            <input type="number" id="valorUnitarioItem" placeholder="Valor Unitário" min="0.01" step="0.01">
+            <input type="text" id="valorTotalItem" placeholder="Valor Total" readonly>
+            
+            <button id="addProdutoBtn">Registrar Produto/Venda</button>
         </div>
 
         <div class="records-table">
-            <h2>Clientes Cadastrados</h2>
+            <h2>Produtos Registrados (Últimos)</h2>
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Nome</th>
-                        <th>Telefone</th>
-                        <th>CPF</th>
-                        <th>Editar</th>
-                        <th>Excluir</th>
+                        <th>Cliente (CPF)</th>
+                        <th>Item</th>
+                        <th>Qtd.</th>
+                        <th>Val. Unit.</th>
+                        <th>Val. Total</th>
+                        <th>Data</th>
                     </tr>
                 </thead>
-                <tbody id="recordsBody">
+                <tbody id="produtosRegistradosBody">
                     <tr>
-                        <td colspan="6" id="noRecordFound">Nenhum cliente cadastrado</td>
+                        <td colspan="7" id="noProdutoRegistradoFound">Nenhum produto registrado</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script src="/public/js/cadastro.js"></script> </body>
+    <script src="/public/js/adicionar_produtos.js"></script>
+</body>
 </html>
