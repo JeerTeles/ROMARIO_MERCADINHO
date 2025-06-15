@@ -1,0 +1,70 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #F8F9FA;
+    overflow: hidden; /* Remove scrollbars as content is minimal and full-screen */
+}
+
+.hero-banner {
+    background-image: url('/banner.png'); /* Imagem de exemplo de mercadinho */
+    background-size: cover;
+    background-position: center;
+    height: 100vh; /* Ocupa a altura total da viewport */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4); /* Escurece a imagem para melhor legibilidade do texto */
+}
+
+.hero-text {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 5rem;
+    line-height: 1;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+    position: relative; /* Para ficar acima do overlay */
+    z-index: 10;
+}
+
+@media (min-width: 768px) {
+    .hero-text {
+        font-size: 7rem; /* Maior em telas maiores */
+    }
+}
+
+@media (max-width: 767px) {
+    .hero-text {
+        font-size: 3.5rem; /* Menor em telas pequenas */
+    }
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: white;
+    border-radius: 9999px; /* Full rounded */
+}
+
+.dot.active {
+    opacity: 1;
+}
+
+.dot:not(.active) {
+    opacity: 0.4;
+}
