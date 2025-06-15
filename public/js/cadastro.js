@@ -5,13 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const telefoneClienteInput = document.getElementById('telefoneCliente');
     const cpfClienteInput = document.getElementById('cpfCliente');
     const addRecordBtn = document.getElementById('addRecordBtn');
-    const recordsBody = document.getElementById('recordsBody'); // Adicionado de volta para a tabela
+    const recordsBody = document.getElementById('recordsBody');
 
-    const searchCpfInput = document.getElementById('searchCpf');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchResultDiv = document.getElementById('searchResult');
+    // Elementos de pesquisa removidos, então essas variáveis são removidas
+    // const searchCpfInput = document.getElementById('searchCpf');
+    // const searchBtn = document.getElementById('searchBtn');
+    // const searchResultDiv = document.getElementById('searchResult');
 
-    let editingClientId = null; // Armazena o ID do cliente sendo editado
+    let editingClientId = null;
 
     // Função para buscar e renderizar todos os clientes
     async function fetchClients() {
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para renderizar a tabela de clientes
     function renderRecords(clients) {
-        recordsBody.innerHTML = ''; // Limpa as linhas existentes
+        recordsBody.innerHTML = '';
 
         if (clients.length === 0) {
             const row = document.createElement('tr');
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfCell.textContent = client.cpf;
             row.appendChild(cpfCell);
 
-            const editCell = document.createElement('td');
+            /*const editCell = document.createElement('td');
             const editButton = document.createElement('button');
             editButton.textContent = 'Editar';
             editButton.classList.add('edit-btn');
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.classList.add('delete-btn');
             deleteButton.addEventListener('click', () => deleteRecord(client.id));
             deleteCell.appendChild(deleteButton);
-            row.appendChild(deleteCell);
+            row.appendChild(deleteCell);*/
 
             recordsBody.appendChild(row);
         });
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             clearForm();
-            editingClientId = null; // Reseta o modo de edição
+            editingClientId = null;
             addRecordBtn.textContent = 'Adicionar Cliente';
             alert('Operação realizada com sucesso!');
             await fetchClients(); // Recarrega a tabela após a operação
@@ -135,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nomeClienteInput.value = client.nomeCliente;
         telefoneClienteInput.value = client.telefone;
         cpfClienteInput.value = client.cpf;
-        // Opcional: Impedir edição do CPF ao entrar no modo de edição (se desejar)
-        // cpfClienteInput.readOnly = true;
+        // cpfClienteInput.readOnly = true; // Opcional: Impedir edição do CPF ao entrar no modo de edição
         addRecordBtn.textContent = 'Salvar Edição';
         editingClientId = client.id;
     }
@@ -155,13 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 alert('Cliente excluído com sucesso!');
-                if (editingClientId === id) { // Se o cliente sendo editado for excluído
+                if (editingClientId === id) {
                     clearForm();
                     editingClientId = null;
                     addRecordBtn.textContent = 'Adicionar Cliente';
                     // cpfClienteInput.readOnly = false;
                 }
-                searchResultDiv.innerHTML = ''; // Limpa o resultado da pesquisa após exclusão
+                // searchResultDiv.innerHTML = ''; // Não há div de resultado de pesquisa nesta página
                 await fetchClients(); // Recarrega a tabela após a exclusão
             } catch (error) {
                 console.error('Erro ao excluir cliente:', error);
@@ -178,47 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // cpfClienteInput.readOnly = false;
     }
 
-    // --- Funcionalidade de Pesquisa por CPF ---
-    searchBtn.addEventListener('click', async () => {
-        const cpf = searchCpfInput.value.trim();
-        searchResultDiv.innerHTML = ''; // Limpa resultados anteriores
-
-        if (!cpf) {
-            searchResultDiv.innerHTML = '<p style="color: orange;">Por favor, digite um CPF para pesquisar.</p>';
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_URL}/cpf/${cpf}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    searchResultDiv.innerHTML = `<p style="color: red;">Cliente com CPF "${cpf}" não encontrado.</p>`;
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-                }
-                return;
-            }
-
-            const client = await response.json();
-            searchResultDiv.innerHTML = `
-                <p><strong>ID:</strong> ${client.id}</p>
-                <p><strong>Nome:</strong> ${client.nomeCliente}</p>
-                <p><strong>Telefone:</strong> ${client.telefone}</p>
-                <p><strong>CPF:</strong> ${client.cpf}</p>
-                <button class="edit-btn" style="margin-right: 5px;">Editar Cliente</button>
-                <button class="delete-btn">Excluir Cliente</button>
-            `;
-            // Adiciona listeners para os botões dentro do resultado da pesquisa
-            searchResultDiv.querySelector('.edit-btn').addEventListener('click', () => editRecord(client));
-            searchResultDiv.querySelector('.delete-btn').addEventListener('click', () => deleteRecord(client.id));
-
-
-        } catch (error) {
-            console.error('Erro ao pesquisar cliente:', error);
-            searchResultDiv.innerHTML = `<p style="color: red;">Erro ao pesquisar: ${error.message}</p>`;
-        }
-    });
+    // A funcionalidade de pesquisa foi removida daqui
 
     // Carrega os clientes do banco de dados ao iniciar a página
     fetchClients();
