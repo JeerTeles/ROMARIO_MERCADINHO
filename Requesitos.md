@@ -11,3 +11,4 @@ tirar os campos editar e excluir da tabela clientes cadastrados da pagina cadast
 
 ---------- Teste unitarios ----------------
 campo cpf deve ser unico 
+cpf não pode ser editado
