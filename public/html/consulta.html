@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Romario Mercadinho</title>
+    <title>Consulta</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
 </head>
 <body>
     <div class="menu-wrapper">
@@ -16,7 +16,7 @@
             <a href="cadastro.html" class="menu-item cadastro-item">
                 <i class="fas fa-user-plus"></i> Cadastro
             </a>
-            <a href="#" class="menu-item consulta-item">
+            <a href="consulta.html" class="menu-item consulta-item">
                 <i class="fas fa-search"></i> Consulta
             </a>
             <a href="#" class="menu-item adicionar-produtos-item">
@@ -29,38 +29,41 @@
     </div>
     <div class="container">
         <div class="registration-form">
-            <h2>Bill Details</h2>
-            <input type="text" id="clientName" placeholder="Cliente">
-            <input type="tel" id="clientPhone" placeholder="Telefone">
-            <input type="text" id="itemName" placeholder="Item">
-            <input type="number" id="itemPrice" placeholder="Preço">
-            <input type="number" id="totalAmount" placeholder="Total" readonly>
-            <button id="addRecordBtn">Adicionar conta</button>
+            <h2>Cadastro e Edição de Clientes</h2>
+            <input type="text" id="nomeCliente" placeholder="Nome do Cliente">
+            <input type="tel" id="telefoneCliente" placeholder="Telefone">
+            <input type="text" id="cpfCliente" placeholder="CPF" maxlength="11">
+            <button id="addRecordBtn">Adicionar Cliente</button>
+
+            <hr>
+
+            <h2>Pesquisar Cliente por CPF</h2>
+            <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
+            <button id="searchBtn">Pesquisar</button>
+            <div id="searchResult"></div>
         </div>
 
         <div class="records-table">
-            <h2>Bills</h2>
+            <h2>Clientes Cadastrados</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Cliente</th>
+                        <th>ID</th>
+                        <th>Nome</th>
                         <th>Telefone</th>
-                        <th>Item</th>
-                        <th>Preço</th>
-                        <th>Total</th>
+                        <th>CPF</th>
                         <th>Editar</th>
                         <th>Excluir</th>
                     </tr>
                 </thead>
                 <tbody id="recordsBody">
                     <tr>
-                        <td colspan="7" id="noRecordFound">Nenhuma conta adicionada</td>
+                        <td colspan="6" id="noRecordFound">Nenhum cliente cadastrado</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script src="script.js"></script>
-</body>
+    <script src="/public/js/cadastro.js"></script> </body>
 </html>
