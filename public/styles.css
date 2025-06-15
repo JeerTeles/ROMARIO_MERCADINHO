@@ -1,0 +1,193 @@
+/*body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}*/
+
+/* Index */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; /* Garante que não há margem padrão no body */
+    padding: 0; /* Garante que não há padding padrão no body */
+    min-height: 100vh; /* Mantém para caso haja mais conteúdo na página */
+    background-color: #e0f2f7; /* Cor de fundo suave */
+    box-sizing: border-box; /* Garante que padding e border sejam incluídos no total width/height */
+}
+
+.menu-wrapper {
+    background-color: #ffffff;
+    padding: 10px 20px; /* Ajusta o padding para um menu horizontal */
+    border-radius: 0; /* Remove o border-radius para se alinhar perfeitamente ao topo */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Propriedades para posicionamento no topo e horizontal */
+    position: fixed; /* O menu permanece no lugar mesmo ao rolar a página */
+    top: 0;
+    left: 0;
+    width: 100%; /* Ocupa a largura total da tela */
+    margin: 0; /* Remove qualquer margem padrão ou anterior */
+    z-index: 1000; /* Garante que o menu fique sobre outros elementos */
+    display: flex; /* Adiciona display flex para alinhar o header e nav */
+    align-items: center; /* Alinha verticalmente o header e nav */
+    justify-content: space-between; /* Espaça o header e o nav */
+}
+
+.menu-header {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0; /* Remove a margem inferior */
+    padding-left: 0; /* Remove padding-left se não for mais necessário */
+}
+
+.menu-nav {
+    display: flex;
+    flex-direction: row; /* Define a direção dos itens para linha (horizontal) */
+    gap: 20px; /* Espaçamento entre os itens do menu */
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px; /* Ajusta o padding para um item de menu horizontal */
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 1em; /* Ajusta o tamanho da fonte */
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-item i {
+    margin-right: 8px; /* Espaço entre o ícone e o texto */
+    font-size: 1.1em;
+}
+
+/* Cores dos itens do menu */
+.home-item {
+    background-color: #ff6b6b; /* Vermelho vibrante */
+}
+.cadastro-item {
+    background-color: #4dc2f7; /* Azul claro */
+}
+.consulta-item {
+    background-color: #6edc6e; /* Verde */
+}
+.adicionar-produtos-item {
+    background-color: #a06dfa; /* Roxo */
+}
+.estoque-item {
+    background-color: #7d5ffa; /* Roxo um pouco mais escuro */
+}
+
+/* Efeitos hover */
+.menu-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Adiciona um padding ao body para evitar que o conteúdo fique por baixo do menu fixo */
+body {
+    padding-top: 60px; /* Ajuste este valor para a altura do seu menu horizontal */
+}
+
+
+
+/* Cadastro */
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 40px;
+    max-width: 1000px; /* Increased max-width to accommodate more columns */
+    width: 100%;
+}
+
+.registration-form, .records-table {
+    flex: 1;
+}
+
+.registration-form h2, .records-table h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.registration-form input,
+.registration-form button {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box; /* Ensure padding and border are inside the element's total width and height */
+}
+
+.registration-form button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.registration-form button:hover {
+    background-color: #0056b3;
+}
+
+.records-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.records-table th, .records-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.records-table th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+.records-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.records-table .edit-btn, .records-table .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+
+.records-table .edit-btn {
+    color: #28a745;
+}
+
+.records-table .edit-btn:hover {
+    background-color: #e6ffe6;
+}
+
+.records-table .delete-btn {
+    color: #dc3545;
+}
+
+.records-table .delete-btn:hover {
+    background-color: #ffe6e6;
+}
+
+#noRecordFound {
+    text-align: center;
+    color: #dc3545;
+    font-weight: bold;
+}
