@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Produtos/Vendas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
+</head>
+<body>
+    <div class="menu-wrapper">
+        <nav class="menu-nav">
+            <a href="index.html" class="menu-item home-item">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="cadastro.html" class="menu-item cadastro-item">
+                <i class="fas fa-user-plus"></i> Cadastro
+            </a>
+            <a href="consulta.html" class="menu-item consulta-item">
+                <i class="fas fa-search"></i> Consulta
+            </a>
+            <a href="adicionarProdutos.html" class="menu-item adicionar-produtos-item">
+                <i class="fas fa-cart-plus"></i> Adicionar Produtos
+            </a>
+            <a href="#" class="menu-item estoque-item">
+                <i class="fas fa-box"></i> Estoque
+            </a>
+        </nav>
+    </div>
+    <div class="container">
+        <div class="registration-form">
+            <h2>Registrar Produtos para Cliente</h2>
+
+            <input type="text" id="cpfClienteProduto" placeholder="CPF do Cliente">
+            <input type="text" id="nomeClienteExibicao" placeholder="Nome do Cliente" readonly>
+            <input type="tel" id="telefoneClienteExibicao" placeholder="Telefone do Cliente" readonly>
+            <p id="clientStatusMessage" style="font-size: 0.9em; margin-top: -10px; margin-bottom: 10px;"></p>
+
+            <hr>
+
+            <h2>Detalhes do Produto/Item</h2>
+            <input type="text" id="nomeItem" placeholder="Nome do Item">
+            <input type="number" id="quantidadeItem" placeholder="Quantidade" min="1" value="1">
+            <input type="number" id="valorUnitarioItem" placeholder="Valor Unitário" min="0.01" step="0.01">
+            <input type="text" id="valorTotalItem" placeholder="Valor Total" readonly>
+            
+            <button id="addProdutoBtn">Registrar Produto/Venda</button>
+        </div>
+
+        <div class="records-table">
+            <h2>Produtos Registrados (Últimos)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente (CPF)</th>
+                        <th>Item</th>
+                        <th>Qtd.</th>
+                        <th>Val. Unit.</th>
+                        <th>Val. Total</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="produtosRegistradosBody">
+                    <tr>
+                        <td colspan="7" id="noProdutoRegistradoFound">Nenhum produto registrado</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/public/js/adicionar_produtos.js"></script>
+</body>
+</html>
