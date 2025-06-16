@@ -31,12 +31,16 @@
         <div class="registration-form">
             <h2>Pesquisar Cliente por CPF</h2>
             <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
-            <button id="searchBtn">Pesquisar</button>
-            <div id="searchResult"></div>
-        </div>
+            <button id="searchCpfBtn">Pesquisar por CPF</button>
+            
+            <hr> <h2>Pesquisar Cliente por Nome</h2>
+            <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
+            <button id="searchNameBtn">Pesquisar por Nome</button>
+
+            <div id="searchResultMessage"></div> </div>
 
         <div class="records-table">
-            <h2>Clientes Cadastrados</h2>
+            <h2>Resultados da Consulta</h2>
             <table>
                 <thead>
                     <tr>
@@ -48,14 +52,13 @@
                         <th>Excluir</th>
                     </tr>
                 </thead>
-                <tbody id="recordsBody">
+                <tbody id="searchResultBody">
                     <tr>
-                        <td colspan="6" id="noRecordFound">Nenhum cliente cadastrado</td>
+                        <td colspan="6" id="noClientFoundInSearch">Utilize os campos acima para pesquisar clientes.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-
-    <script src="/public/js/cadastro.js"></script> </body>
+    <script src="/public/js/consulta.js"></script> </body>
 </html>
