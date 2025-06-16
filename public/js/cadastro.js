@@ -1,46 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_URL = 'http://localhost:3000/api/clientes';
+    const API_CLIENTES_URL = 'http://localhost:3000/api/clientes';
+    const CLIENTS_PER_PAGE = 10; // Define quantos clientes por página
 
+    // Elementos do Formulário de Cadastro/Edição
     const nomeClienteInput = document.getElementById('nomeCliente');
     const telefoneClienteInput = document.getElementById('telefoneCliente');
     const cpfClienteInput = document.getElementById('cpfCliente');
     const addRecordBtn = document.getElementById('addRecordBtn');
-    const recordsBody = document.getElementById('recordsBody');
 
-    // Elementos de pesquisa removidos, então essas variáveis são removidas
-    // const searchCpfInput = document.getElementById('searchCpf');
-    // const searchBtn = document.getElementById('searchBtn');
-    // const searchResultDiv = document.getElementById('searchResult');
+    // Elementos da Tabela de Clientes Cadastrados
+    const clientesListBody = document.getElementById('clientesListBody');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageInfoSpan = document.getElementById('pageInfo');
 
-    let editingClientId = null;
+    let editingClientId = null; // Armazena o ID do cliente sendo editado
+    let currentPage = 1;
+    let totalPages = 1;
 
-    // Função para buscar e renderizar todos os clientes
-    async function fetchClients() {
+    // --- Funções para a Tabela de Clientes Cadastrados (LISTAGEM + PAGINAÇÃO) ---
+
+    // Função para buscar e renderizar clientes com paginação
+    async function fetchClientsPaged() {
+        clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound">Carregando clientes...</td></tr>`;
+
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(`${API_CLIENTES_URL}?page=${currentPage}&limit=${CLIENTS_PER_PAGE}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const clients = await response.json();
-            renderRecords(clients);
+            const result = await response.json(); // A resposta agora contém data, totalPages, etc.
+            
+            totalPages = result.totalPages;
+            renderClientsList(result.data);
+            updatePaginationControls();
+
         } catch (error) {
             console.error('Erro ao buscar clientes:', error);
-            recordsBody.innerHTML = `<tr><td colspan="6" id="noRecordFound" style="color: red;">Erro ao carregar dados: ${error.message}</td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound" style="color: red;">Erro ao carregar clientes: ${error.message}</td></tr>`;
+            pageInfoSpan.textContent = 'Erro';
+            prevPageBtn.disabled = true;
+            nextPageBtn.disabled = true;
         }
     }
 
     // Função para renderizar a tabela de clientes
-    function renderRecords(clients) {
-        recordsBody.innerHTML = '';
+    function renderClientsList(clients) {
+        clientesListBody.innerHTML = ''; // Limpa as linhas existentes
 
         if (clients.length === 0) {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 6;
-            cell.id = 'noRecordFound';
-            cell.textContent = 'Nenhum cliente cadastrado';
-            row.appendChild(cell);
-            recordsBody.appendChild(row);
+            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound">Nenhum cliente cadastrado.</td></tr>`;
             return;
         }
 
@@ -63,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfCell.textContent = client.cpf;
             row.appendChild(cpfCell);
 
-            /*const editCell = document.createElement('td');
+            const editCell = document.createElement('td');
             const editButton = document.createElement('button');
             editButton.textContent = 'Editar';
             editButton.classList.add('edit-btn');
-            editButton.addEventListener('click', () => editRecord(client));
+            editButton.addEventListener('click', () => editRecord(client)); // Chama editRecord para preencher o formulário
             editCell.appendChild(editButton);
             row.appendChild(editCell);
 
@@ -77,11 +86,36 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.classList.add('delete-btn');
             deleteButton.addEventListener('click', () => deleteRecord(client.id));
             deleteCell.appendChild(deleteButton);
-            row.appendChild(deleteCell);*/
+            row.appendChild(deleteCell);
 
-            recordsBody.appendChild(row);
+            clientesListBody.appendChild(row);
         });
     }
+
+    // Função para atualizar o estado dos botões de paginação e info
+    function updatePaginationControls() {
+        pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+    }
+
+    // Event Listeners para os botões de paginação
+    prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            fetchClientsPaged();
+        }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            fetchClientsPaged();
+        }
+    });
+
+
+    // --- Funções do Formulário de Cadastro/Edição ---
 
     // Função para adicionar ou atualizar cliente
     addRecordBtn.addEventListener('click', async () => {
@@ -100,14 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let response;
             if (editingClientId === null) {
                 // Adicionar novo cliente (POST)
-                response = await fetch(API_URL, {
+                response = await fetch(API_CLIENTES_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clientData)
                 });
             } else {
                 // Atualizar cliente existente (PUT)
-                response = await fetch(`${API_URL}/${editingClientId}`, {
+                response = await fetch(`${API_CLIENTES_URL}/${editingClientId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clientData)
@@ -120,10 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             clearForm();
-            editingClientId = null;
+            editingClientId = null; // Reseta o modo de edição
             addRecordBtn.textContent = 'Adicionar Cliente';
             alert('Operação realizada com sucesso!');
-            await fetchClients(); // Recarrega a tabela após a operação
+            currentPage = 1; // Volta para a primeira página após adicionar/editar
+            await fetchClientsPaged(); // Recarrega a tabela após a operação
 
         } catch (error) {
             console.error('Erro ao salvar cliente:', error);
@@ -145,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function deleteRecord(id) {
         if (confirm('Tem certeza que deseja excluir este cliente?')) {
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                const response = await fetch(`${API_CLIENTES_URL}/${id}`, {
                     method: 'DELETE'
                 });
 
@@ -155,14 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 alert('Cliente excluído com sucesso!');
-                if (editingClientId === id) {
+                if (editingClientId === id) { // Se o cliente sendo editado for excluído
                     clearForm();
                     editingClientId = null;
                     addRecordBtn.textContent = 'Adicionar Cliente';
                     // cpfClienteInput.readOnly = false;
                 }
-                // searchResultDiv.innerHTML = ''; // Não há div de resultado de pesquisa nesta página
-                await fetchClients(); // Recarrega a tabela após a exclusão
+                currentPage = 1; // Volta para a primeira página após excluir
+                await fetchClientsPaged(); // Recarrega a tabela após a exclusão
             } catch (error) {
                 console.error('Erro ao excluir cliente:', error);
                 alert('Erro ao excluir cliente: ' + error.message);
@@ -178,8 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // cpfClienteInput.readOnly = false;
     }
 
-    // A funcionalidade de pesquisa foi removida daqui
-
-    // Carrega os clientes do banco de dados ao iniciar a página
-    fetchClients();
+    // Carrega a primeira página de clientes ao iniciar
+    fetchClientsPaged();
 });

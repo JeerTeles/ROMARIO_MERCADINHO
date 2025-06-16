@@ -53,10 +53,43 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
 
 // --- Rotas da API para Clientes (existentes) ---
 
-app.get('/api/clientes', (req, res) => {
+/*app.get('/api/clientes', (req, res) => {
     db.all('SELECT * FROM clientes', [], (err, rows) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         res.json(rows);
+    });
+});*/
+
+// MODIFICADA: Obter todos os clientes com paginação
+app.get('/api/clientes', (req, res) => {
+    const page = parseInt(req.query.page) || 1; // Página atual, padrão 1
+    const limit = parseInt(req.query.limit) || 10; // Itens por página, padrão 10
+    const offset = (page - 1) * limit; // Offset para a consulta SQL
+
+    let totalClients = 0;
+
+    // Primeiro, obtém a contagem total de clientes para calcular o total de páginas
+    db.get('SELECT COUNT(*) AS count FROM clientes', [], (err, row) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        totalClients = row.count;
+
+        // Em seguida, obtém os clientes para a página atual
+        db.all('SELECT * FROM clientes LIMIT ? OFFSET ?', [limit, offset], (err, rows) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({
+                data: rows, // <<-- ESTE É O OBJETO QUE O FRONTEND ESPERA!
+                currentPage: page,
+                perPage: limit,
+                totalItems: totalClients,
+                totalPages: Math.ceil(totalClients / limit)
+            });
+        });
     });
 });
 
@@ -274,6 +307,6 @@ app.listen(PORT, () => {
 
 
 // Inicia o servidor
-app.listen(PORT, () => {
+/*app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+});*/
