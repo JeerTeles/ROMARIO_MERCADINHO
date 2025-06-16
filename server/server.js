@@ -68,6 +68,24 @@ app.get('/api/clientes/cpf/:cpf', (req, res) => {
     });
 });
 
+// NOVA ROTA: Obter clientes por nome
+app.get('/api/clientes/nome/:nome', (req, res) => {
+    const nome = req.params.nome;
+    // Usamos LIKE para buscar nomes que contenham a string informada
+    // % é um curinga que representa zero ou mais caracteres
+    db.all('SELECT * FROM clientes WHERE nomeCliente LIKE ?', [`%${nome}%`], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        if (rows.length === 0) {
+            res.status(404).json({ message: 'Nenhum cliente encontrado com este nome.' });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
 app.post('/api/clientes', (req, res) => {
     const { nomeCliente, telefone, cpf } = req.body;
     if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Todos os campos (Nome, Telefone, CPF) são obrigatórios.' }); }
