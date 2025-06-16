@@ -9,6 +9,14 @@ Mudar mensagem de cliente cadastrado com sucesso
 Mostra até 10 clientes da tabela cliente na pagina cadastro
 Adicionar campo divida na tabela consulta
 colocar verificação pra  telefone
+Não exibir os campos id, editar e excluir da pagina de consultas
+Adicionar o campo divida na pagina de consultas
+Criar função para acesso com login e senha para pagina de cadastro
+Função pesquisar por nome no tabela intens em estoque 
+Paginação na tabela itens em estoque 
+Não exibir a campo id na tabela itens de estoque
+Adicionat os campos total de compra e total de venda na tabela itens estoques
+Criar função para acesso com login e senha para pagina de estoque
 
 
 
