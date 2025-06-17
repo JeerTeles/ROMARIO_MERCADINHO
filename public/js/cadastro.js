@@ -34,10 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPages = result.totalPages;
             renderClientsList(result.data);
             updatePaginationControls();
-
+            
         } catch (error) {
             console.error('Erro ao buscar clientes:', error);
-            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound" style="color: red;">Erro ao carregar clientes: ${error.message}</td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound" style="color: red;">Erro ao carregar clientes, sem servidor! </td></tr>`;
             pageInfoSpan.textContent = 'Erro';
             prevPageBtn.disabled = true;
             nextPageBtn.disabled = true;
@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
         clients.forEach((client) => {
             const row = document.createElement('tr');
 
-            const idCell = document.createElement('td');
+            /*const idCell = document.createElement('td');
             idCell.textContent = client.id;
-            row.appendChild(idCell);
+            row.appendChild(idCell);*/
 
             const nomeCell = document.createElement('td');
             nomeCell.textContent = client.nomeCliente;
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearForm();
             editingClientId = null; // Reseta o modo de edição
             addRecordBtn.textContent = 'Adicionar Cliente';
-            alert('Operação realizada com sucesso!');
+            alert('Cliente cadastrado com sucesso!');
             currentPage = 1; // Volta para a primeira página após adicionar/editar
             await fetchClientsPaged(); // Recarrega a tabela após a operação
 
