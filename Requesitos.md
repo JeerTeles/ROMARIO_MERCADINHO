@@ -1,23 +1,37 @@
+-------- Geral --------
+colocar verificação pra  telefone [OK]
+
+------ Cadastro --------
 Adicionar CPF chave primary key [OK]
-Na pagina de casdastro na tabela clientes cadastrados não exibir o campo id
-Na pagina de casdastro na tabela clientes cadastrados adicionar o campo divida
+Na pagina de casdastro na tabela clientes cadastrados não exibir o campo id [oK]
+Mostra até 10 clientes da tabela cliente na pagina cadastro [OK]
+Criar função para acesso com senha para editar e excluir pagina de cadastro
+Na pagina de casdastro na tabela clientes cadastrados, adicionar o campo divida
+
+---------- Consulta ---------
 Criar controle de caixa 
-Passa o campo pesquisar cliente por cpf
-tirar os campos editar e excluir da tabela clientes cadastrados da pagina cadastro
-Implementar pagina de caixas (Vai conter pagos, saldo)
-Mudar mensagem de cliente cadastrado com sucesso
-Mostra até 10 clientes da tabela cliente na pagina cadastro
+Passa o campo pesquisar cliente por cpf [OK]
+Mudar mensagem de cliente cadastrado com sucesso [OK]
 Adicionar campo divida na tabela consulta
-colocar verificação pra  telefone
 Não exibir os campos id, editar e excluir da pagina de consultas
 Adicionar o campo divida na pagina de consultas
-Criar função para acesso com login e senha para pagina de cadastro
+
+-------- Estoque-------------
 Função pesquisar por nome no tabela intens em estoque 
 Paginação na tabela itens em estoque 
+Exibir apenas dez itens da tabela
 Não exibir a campo id na tabela itens de estoque
-Adicionat os campos total de compra e total de venda na tabela itens estoques
+Adicionar os campos total de compra e total de venda na tabela itens estoques
 Criar função para acesso com login e senha para pagina de estoque
 
+--------- Adicionar produtos ------
+Pesquisar cliente por nome em adicionar produtos
+adicionar os campos divida na tabela Produtos Registrados (Últimos) na pagina adicionar produtos
+Trocar no da pagina adicionar produtos por adiconar venda
+Mudar titulo de (Registrar Produtos para Cliente) para (Pesquisar cliente para add itens) na pagina adicionar produtos
+Mudar titulo de (Detalhes do Produto/Item) para (adicionar item ao cliente) na pagina adicionar produtos
+Mudar layout da pagina adicionar produtos lado a lado campos de pesquisas e tabela Produtos Registrados (Últimos) em baixo
+Não exibir id na tabela Produtos Registrados (Últimos)
 
 
 
