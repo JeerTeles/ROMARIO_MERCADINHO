@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearForm();
             editingClientId = null; // Reseta o modo de edição
             addRecordBtn.textContent = 'Adicionar Cliente';
-            alert('Operação realizada com sucesso!');
+            alert('Cliente cadastrado com sucesso!');
             currentPage = 1; // Volta para a primeira página após adicionar/editar
             await fetchClientsPaged(); // Recarrega a tabela após a operação
 
