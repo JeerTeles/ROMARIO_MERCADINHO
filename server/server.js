@@ -6,6 +6,17 @@ const app = express();
 const PORT = 3000;
 const DB_FILE = './server/database.sqlite';
 
+// --- Função de Validação de Telefone Brasileiro (BACKEND) ---
+// Retorna true se o telefone tiver 10 ou 11 dígitos (após remover caracteres não numéricos)
+function isValidBrazilianPhone(phone) {
+    if (!phone) return false;
+    // Remove todos os caracteres não numéricos
+    const cleanedPhone = String(phone).replace(/\D/g, ''); // Garante que é string e limpa
+    // Verifica se tem 10 (DDD + 8 dígitos) ou 11 (DDD + 9 dígitos)
+    // E verifica se não é uma string de zeros ou vazia após limpeza
+    return (cleanedPhone.length === 10 || cleanedPhone.length === 11) && cleanedPhone !== '';
+}
+
 // Configurações do Express
 app.use(express.json());
 app.use(cors());
@@ -48,17 +59,21 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
                 console.log('Tabela "produtos_registrados" criada ou já existe.');
             }
         });
+
+        // Tabela 'estoque' (existente)
+        db.run(`CREATE TABLE IF NOT EXISTS estoque (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            produto TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            precoDeCompra REAL NOT NULL,
+            precoDeVenda REAL NOT NULL
+        )`, (err) => {
+            if (err) { console.error('Erro ao criar tabela "estoque":', err.message); } else { console.log('Tabela "estoque" criada ou já existe.'); }
+        });
     }
 });
 
-// --- Rotas da API para Clientes (existentes) ---
 
-/*app.get('/api/clientes', (req, res) => {
-    db.all('SELECT * FROM clientes', [], (err, rows) => {
-        if (err) { res.status(500).json({ error: err.message }); return; }
-        res.json(rows);
-    });
-});*/
 
 // MODIFICADA: Obter todos os clientes com paginação
 app.get('/api/clientes', (req, res) => {
@@ -119,9 +134,21 @@ app.get('/api/clientes/nome/:nome', (req, res) => {
     });
 });
 
+// MODIFICADA: Adicionar um novo cliente
 app.post('/api/clientes', (req, res) => {
-    const { nomeCliente, telefone, cpf } = req.body;
-    if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Todos os campos (Nome, Telefone, CPF) são obrigatórios.' }); }
+    let { nomeCliente, telefone, cpf } = req.body;
+
+    // Limpa o telefone antes da validação e armazenamento
+    telefone = String(telefone).replace(/\D/g, ''); 
+
+    if (!nomeCliente || !telefone || !cpf) {
+        return res.status(400).json({ error: 'Todos os campos (Nome, Telefone, CPF) são obrigatórios.' });
+    }
+    // --- Nova Validação de Telefone ---
+    if (!isValidBrazilianPhone(telefone)) {
+        return res.status(400).json({ error: 'Formato de telefone inválido. Use DDD + 8 ou 9 dígitos (somente números).' });
+    }
+
     db.run(`INSERT INTO clientes (nomeCliente, telefone, cpf) VALUES (?, ?, ?)`,
         [nomeCliente, telefone, cpf],
         function (err) {
@@ -134,10 +161,22 @@ app.post('/api/clientes', (req, res) => {
     );
 });
 
+// MODIFICADA: Atualizar um cliente existente
 app.put('/api/clientes/:id', (req, res) => {
     const { id } = req.params;
-    const { nomeCliente, telefone, cpf } = req.body;
-    if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Todos os campos (Nome, Telefone, CPF) são obrigatórios.' }); }
+    let { nomeCliente, telefone, cpf } = req.body;
+
+    // Limpa o telefone antes da validação e armazenamento
+    telefone = String(telefone).replace(/\D/g, '');
+
+    if (!nomeCliente || !telefone || !cpf) {
+        return res.status(400).json({ error: 'Todos os campos (Nome, Telefone, CPF) são obrigatórios.' });
+    }
+    // --- Nova Validação de Telefone ---
+    if (!isValidBrazilianPhone(telefone)) {
+        return res.status(400).json({ error: 'Formato de telefone inválido. Use DDD + 8 ou 9 dígitos (somente números).' });
+    }
+
     db.run(`UPDATE clientes SET nomeCliente = ?, telefone = ?, cpf = ? WHERE id = ?`,
         [nomeCliente, telefone, cpf, id],
         function (err) {
@@ -158,9 +197,7 @@ app.delete('/api/clientes/:id', (req, res) => {
     });
 });
 
-// --- NOVA ROTA API para Produtos Registrados (Vendas/Itens para Clientes) ---
-
-// POST: Adicionar um novo produto registrado/venda para um cliente
+// --- Rota API para Produtos Registrados (Vendas/Itens para Clientes) ---
 app.post('/api/produtos-registrados', (req, res) => {
     const { cpfCliente, nome_item, quantidade, valor_unitario } = req.body;
 
@@ -200,7 +237,6 @@ app.post('/api/produtos-registrados', (req, res) => {
     });
 });
 
-
 // GET: Obter todos os produtos registrados (opcional, mas útil para consulta futura)
 app.get('/api/produtos-registrados', (req, res) => {
     // JOIN com a tabela clientes para trazer os dados do cliente também
@@ -229,9 +265,7 @@ app.get('/api/produtos-registrados', (req, res) => {
 });
 
 
-// --- NOVAS ROTAS DA API para Estoque ---
-
-// GET: Obter todos os itens do estoque
+// --- Rotas da API para Estoque ---
 app.get('/api/estoque', (req, res) => {
     db.all('SELECT * FROM estoque', [], (err, rows) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
@@ -239,7 +273,6 @@ app.get('/api/estoque', (req, res) => {
     });
 });
 
-// POST: Adicionar um novo item ao estoque
 app.post('/api/estoque', (req, res) => {
     const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
 
@@ -264,7 +297,6 @@ app.post('/api/estoque', (req, res) => {
     );
 });
 
-// PUT: Atualizar um item do estoque
 app.put('/api/estoque/:id', (req, res) => {
     const { id } = req.params;
     const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
@@ -290,7 +322,6 @@ app.put('/api/estoque/:id', (req, res) => {
     );
 });
 
-// DELETE: Excluir um item do estoque
 app.delete('/api/estoque/:id', (req, res) => {
     const { id } = req.params;
 
@@ -304,9 +335,3 @@ app.delete('/api/estoque/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
-
-// Inicia o servidor
-/*app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-});*/
