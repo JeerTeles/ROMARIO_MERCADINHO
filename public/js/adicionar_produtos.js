@@ -153,8 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         produtos.forEach((prod) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${prod.id}</td>
-                <td>${prod.nomeCliente} (${prod.cpf})</td>
+                <td>${prod.nomeCliente}</td>
                 <td>${prod.nome_item}</td>
                 <td>${prod.quantidade}</td>
                 <td>${prod.valor_unitario.toFixed(2)}</td>
