@@ -1,5 +1,7 @@
 -------- Geral --------
 colocar verificação pra  telefone [OK]
+Passar todos os dados sensiveis para o .env
+Aplicar media query
 
 ------ Cadastro --------
 Adicionar CPF chave primary key [OK]
@@ -15,14 +17,6 @@ Mudar mensagem de cliente cadastrado com sucesso [OK]
 Não exibir os campos id, editar e excluir da pagina de consultas [OK]
 Adicionar o campo divida na pagina de consultas
 
--------- Estoque-------------
-Função pesquisar por nome no tabela intens em estoque 
-Paginação na tabela itens em estoque 
-Exibir apenas dez itens da tabela
-Não exibir a campo id na tabela itens de estoque
-Adicionar os campos total de compra e total de venda na tabela itens estoques
-Criar função para acesso com login e senha para pagina de estoque
-
 --------- Adicionar produtos ------
 Pesquisar cliente por nome em adicionar produtos
 adicionar os campos divida na tabela Produtos Registrados (Últimos) na pagina adicionar produtos
@@ -31,6 +25,16 @@ Mudar titulo de (Registrar Produtos para Cliente) para (Pesquisar cliente para a
 Mudar titulo de (Detalhes do Produto/Item) para (adicionar item ao cliente) na pagina adicionar produtos
 Mudar layout da pagina adicionar produtos lado a lado campos de pesquisas e tabela Produtos Registrados (Últimos) em baixo
 Não exibir id na tabela Produtos Registrados (Últimos)
+
+-------- Estoque-------------
+Função pesquisar por nome no tabela intens em estoque 
+Paginação na tabela itens em estoque 
+Exibir apenas dez itens da tabela
+Não exibir a campo id na tabela itens de estoque
+Adicionar os campos total de compra e total de venda na tabela itens estoques
+Criar função para acesso com login e senha para pagina de estoque
+
+
 
 
 

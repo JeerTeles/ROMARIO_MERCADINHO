@@ -32,7 +32,10 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nomeCliente TEXT NOT NULL,
             telefone TEXT NOT NULL,
-            cpf TEXT UNIQUE NOT NULL
+            cpf TEXT UNIQUE NOT NULL,
+            item INTEGER DEFAULT 0,       -- NOVO CAMPO
+            quantidade INTEGER DEFAULT 0, -- NOVO CAMPO
+            divida REAL DEFAULT 0.0       -- NOVO CAMPO
         )`, (err) => {
             if (err) {
                 console.error('Erro ao criar tabela "clientes":', err.message);
@@ -334,4 +337,4 @@ app.delete('/api/estoque/:id', (req, res) => {
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+}); 
