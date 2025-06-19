@@ -161,9 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
         clients.forEach(client => {
             const row = document.createElement('tr');
 
-            const idCell = document.createElement('td');
+            /*const idCell = document.createElement('td');
             idCell.textContent = client.id;
-            row.appendChild(idCell);
+            row.appendChild(idCell);*/
 
             const nomeCell = document.createElement('td');
             nomeCell.textContent = client.nomeCliente;
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfCell.textContent = client.cpf;
             row.appendChild(cpfCell);
 
-            const editCell = document.createElement('td');
+            /*const editCell = document.createElement('td');
             const editButton = document.createElement('button');
             editButton.textContent = 'Editar';
             editButton.classList.add('edit-btn');
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.classList.add('delete-btn');
             deleteButton.addEventListener('click', () => deleteClient(client.id));
             deleteCell.appendChild(deleteButton);
-            row.appendChild(deleteCell);
+            row.appendChild(deleteCell);*/
 
             searchResultBody.appendChild(row);
         });
