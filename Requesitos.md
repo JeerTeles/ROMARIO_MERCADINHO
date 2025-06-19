@@ -12,8 +12,7 @@ Na pagina de casdastro na tabela clientes cadastrados, adicionar o campo divida
 Criar controle de caixa 
 Passa o campo pesquisar cliente por cpf [OK]
 Mudar mensagem de cliente cadastrado com sucesso [OK]
-Adicionar campo divida na tabela consulta
-Não exibir os campos id, editar e excluir da pagina de consultas
+Não exibir os campos id, editar e excluir da pagina de consultas [OK]
 Adicionar o campo divida na pagina de consultas
 
 -------- Estoque-------------
