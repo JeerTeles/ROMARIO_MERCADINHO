@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(cpfCell);
 
             const itenCliente = document.createElement('td');
-            itenCliente.textContent = client.item;
+            itenCliente.textContent = client.item ;
             row.appendChild(itenCliente);
 
             const quantidadeCliente = document.createElement('td');
