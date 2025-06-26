@@ -8,7 +8,7 @@ Adicionar CPF chave primary key [OK]
 Na pagina de casdastro na tabela clientes cadastrados não exibir o campo id [oK]
 Mostra até 10 clientes da tabela cliente na pagina cadastro [OK]
 Criar função para acesso com senha para editar e excluir pagina de cadastro
-Na pagina de casdastro na tabela clientes cadastrados, adicionar o campo item, quntidade e  divida [Ok]
+Na pagina de casdastro na tabela clientes cadastrados, adicionar o campo item, quantidade e  divida [Ok]
 
 ---------- Consulta ---------
 Criar controle de caixa 
