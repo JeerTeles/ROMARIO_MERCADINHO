@@ -28,46 +28,77 @@
             </a>
         </nav>
     </div>
-    <div class="container" id="container-search">
-        <div class="registration-form" id="registration-form-search">
-
-            <div class="search">
-                <h2>Pesquisar Cliente por CPF</h2>
-                <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
-                <button id="searchCpfBtn">Pesquisar por CPF</button>
-            </div>
-        
-            <div class="search">
-                <h2>Pesquisar Cliente por Nome</h2>
-                <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
-                <button id="searchNameBtn">Pesquisar por Nome</button>
-                <div id="searchResultMessage"></div>
-            </div>
+    <div class="container">
+        <div class="registration-form">
+            <h2>Pesquisar Cliente</h2>
+            <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
+            <button id="searchCpfBtn">Pesquisar por CPF</button>
             
-             
+            <hr>
+
+            <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
+            <button id="searchNameBtn">Pesquisar por Nome</button>
+
+            <div id="searchResultMessage"></div>
         </div>
 
         <div class="records-table">
-            <h2>Resultados da Consulta</h2>
+            <h2>Cliente Encontrado</h2>
+            <div id="clientDetailsContent">
+                <p>Nenhum cliente selecionado para exibir detalhes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Adicionar Produtos e Listar Produtos do Cliente Selecionado -->
+    <div id="clientActionsSection" class="container" style="display: none; flex-direction: column;">
+        
+        <div class="add-product-section">
+            <h3>Associar Novo Produto ao Cliente</h3>
+            <div class="form-group">
+                <label for="itemProdutoSelect">Produto:</label>
+                <select id="itemProdutoSelect" style="width: 100%;">
+                    <option value="">Selecione um Produto</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantidadeProduto">Quantidade:</label>
+                <input type="number" id="quantidadeProduto" placeholder="Quantidade" min="1" value="1" style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <label for="valorUnitarioProduto">Valor Unitário (Estoque):</label>
+                <input type="number" id="valorUnitarioProduto" placeholder="Valor Unitário" min="0.01" step="0.01" readonly style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <label for="valorTotalProdutoAssoc">Valor Total do Item:</label>
+                <input type="text" id="valorTotalProdutoAssoc" placeholder="Valor Total" readonly style="width: 100%;">
+            </div>
+            <button id="addProductToClientBtn">Associar Produto</button>
+        </div>
+
+        <div class="client-products-list">
+            <h3>Produtos Associados a Este Cliente</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Nome</th>
-                        <th>Telefone</th>
-                        <th>CPF</th>
-                        
-                        <th>Item</th>
-                        <th>Quantidade</th>
-                        <th>Divida</th>
+                        <th>ID Venda</th>
+                        <th>Produto</th>
+                        <th>Qtd.</th>
+                        <th>Val. Unit.</th>
+                        <th>Val. Total</th>
+                        <th>Data</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="searchResultBody">
+                <tbody id="clientAssociatedProductsBody">
                     <tr>
-                        <td colspan="6" id="noClientFoundInSearch">Utilize os campos acima para pesquisar clientes.</td>
+                        <td colspan="7">Nenhum produto associado.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-    <script src="/public/js/consulta.js"></script> </body>
+
+    <script src="/public/js/consulta.js"></script> 
+</body>
 </html>
