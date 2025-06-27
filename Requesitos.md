@@ -2,6 +2,7 @@
 colocar verificação pra  telefone [OK]
 Passar todos os dados sensiveis para o .env
 Aplicar media query
+aplicar verificação para cpf 
 
 ------ Cadastro --------
 Adicionar CPF chave primary key [OK]
@@ -9,6 +10,7 @@ Na pagina de casdastro na tabela clientes cadastrados não exibir o campo id [oK
 Mostra até 10 clientes da tabela cliente na pagina cadastro [OK]
 Criar função para acesso com senha para editar e excluir pagina de cadastro
 Na pagina de casdastro na tabela clientes cadastrados, adicionar o campo item, quantidade e  divida [Ok]
+Tirar os campos itens, quantidades e divida da tabela cadastro no front-end
 
 ---------- Consulta ---------
 Criar controle de caixa 
@@ -16,6 +18,7 @@ Passa o campo pesquisar cliente por cpf [OK]
 Mudar mensagem de cliente cadastrado com sucesso [OK]
 Não exibir os campos id, editar e excluir da pagina de consultas [OK]
 Adicionar o campo divida na pagina de consultas
+Tirar os botões da tabela cliente encontrado front-end
 
 --------- Adicionar produtos ------
 Pesquisar cliente por nome em adicionar produtos
