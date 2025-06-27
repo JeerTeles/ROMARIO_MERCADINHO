@@ -341,8 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Operação realizada com sucesso!');
             currentPage = 1; // Volta para a primeira página após adicionar/editar
             await fetchEstoquePaged(); // Recarrega a tabela após a operação
-
-        } catch (error) {
+        } 
+        catch (error) {
             console.error('Erro ao salvar item do estoque:', error);
             alert('Erro ao salvar item do estoque: ' + error.message);
         }
