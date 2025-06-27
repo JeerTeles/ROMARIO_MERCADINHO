@@ -31,52 +31,80 @@
 
     <div class="container">
         <div class="registration-form">
-            <h2>Registrar Produtos para Cliente</h2>
-
-            <!-- Campos do Cliente (para pesquisa/exibição) -->
-            <input type="text" id="cpfClienteProduto" placeholder="CPF do Cliente">
-            <input type="text" id="nomeClienteExibicao" placeholder="Nome do Cliente" readonly>
-            <input type="tel" id="telefoneClienteExibicao" placeholder="Telefone do Cliente" readonly>
-            <p id="clientStatusMessage" style="font-size: 0.9em; margin-top: -10px; margin-bottom: 10px;"></p>
-
+            <h2>Pesquisar Cliente</h2>
+            <div class="search-group">
+                <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
+                <button id="searchCpfBtn">Pesquisar por CPF</button>
+            </div>
+            
             <hr>
 
-            <h2>Detalhes do Produto/Item</h2>
-            <!-- AGORA É UM SELECT -->
-            <select id="itemProdutoSelect">
-                <option value="">Selecione um Produto</option>
-                <!-- Opções serão carregadas dinamicamente -->
-            </select>
+            <div class="search-group">
+                <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
+                <button id="searchNameBtn">Pesquisar por Nome</button>
+            </div>
 
-            <input type="number" id="quantidadeItem" placeholder="Quantidade" min="1" value="1">
-            <input type="number" id="valorUnitarioItem" placeholder="Valor Unitário" min="0.01" step="0.01" readonly> <!-- Agora é readonly -->
-            <input type="text" id="valorTotalItem" placeholder="Valor Total" readonly>
-            
-            <button id="addProdutoBtn">Registrar Produto/Venda</button>
+            <div id="searchResultMessage"></div>
         </div>
 
         <div class="records-table">
-            <h2>Produtos Registrados (Últimos)</h2>
+            <h2>Cliente Encontrado</h2>
+            <div id="clientDetailsContent">
+                <p>Nenhum cliente selecionado para exibir detalhes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Adicionar Produtos e Listar Produtos do Cliente Selecionado -->
+    <div id="clientActionsSection" class="container" style="display: none; flex-direction: column;">
+        
+        <div class="add-product-section">
+            <h3>Associar Novo Produto ao Cliente</h3>
+            <div class="form-group">
+                <label for="itemProdutoSelect">Produto:</label>
+                <select id="itemProdutoSelect" style="width: 100%;">
+                    <option value="">Selecione um Produto</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantidadeProduto">Quantidade:</label>
+                <input type="number" id="quantidadeProduto" placeholder="Quantidade" min="1" value="1" style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <label for="valorUnitarioProduto">Valor Unitário (Estoque):</label>
+                <input type="number" id="valorUnitarioProduto" placeholder="Valor Unitário" min="0.01" step="0.01" readonly style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <label for="valorTotalProdutoAssoc">Valor Total do Item:</label>
+                <input type="text" id="valorTotalProdutoAssoc" placeholder="Valor Total" readonly style="width: 100%;">
+            </div>
+            <button id="addProductToClientBtn">Associar Produto</button>
+        </div>
+
+        <div class="client-products-list">
+            <h3>Produtos Associados a Este Cliente</h3>
             <table>
                 <thead>
                     <tr>
                         <th>ID Venda</th>
-                        <th>Cliente (CPF)</th>
-                        <th>Item</th>
+                        <th>Produto</th>
                         <th>Qtd.</th>
                         <th>Val. Unit.</th>
                         <th>Val. Total</th>
                         <th>Data</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="produtosRegistradosBody">
+                <tbody id="clientAssociatedProductsBody">
                     <tr>
-                        <td colspan="7" id="noProdutoRegistradoFound">Nenhum produto registrado</td>
+                        <td colspan="7">Nenhum produto associado.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+
 
 
     <script src="/public/js/adicionar_produtos.js"></script>
