@@ -1,143 +1,241 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_CLIENTES_URL = 'http://localhost:3000/api/clientes';
-    const API_PRODUTOS_REGISTRADOS_URL = 'http://localhost:3000/api/produtos-registrados';
-    const API_ESTOQUE_LIST_URL = 'http://localhost:3000/api/estoque/list-for-select'; // Rota para listar produtos (id, nome)
-    const API_ESTOQUE_GET_ONE_URL = 'http://localhost:3000/api/estoque/'; // Para buscar preço de venda
+    const API_ESTOQUE_LIST_URL = 'http://localhost:3000/api/estoque/list-for-select';
+    const API_CLIENTE_PRODUTOS_URL = 'http://localhost:3000/api/cliente-produtos'; // Nova rota de API
 
-    // Campos do Cliente
-    const cpfClienteProdutoInput = document.getElementById('cpfClienteProduto');
-    const nomeClienteExibicaoInput = document.getElementById('nomeClienteExibicao');
-    const telefoneClienteExibicaoInput = document.getElementById('telefoneClienteExibicao');
-    const clientStatusMessage = document.getElementById('clientStatusMessage');
+    // Elementos de Pesquisa
+    const searchCpfInput = document.getElementById('searchCpf');
+    const searchCpfBtn = document.getElementById('searchCpfBtn');
+    const searchNameInput = document.getElementById('searchName');
+    const searchNameBtn = document.getElementById('searchNameBtn');
+    const searchResultMessage = document.getElementById('searchResultMessage');
 
-    // Campos do Produto (agora com select)
-    const itemProdutoSelect = document.getElementById('itemProdutoSelect'); // NOVO SELECT
-    const quantidadeItemInput = document.getElementById('quantidadeItem');
-    const valorUnitarioItemInput = document.getElementById('valorUnitarioItem');
-    const valorTotalItemInput = document.getElementById('valorTotalItem');
+    // Elementos de Detalhes do Cliente Encontrado
+    const clientDetailsContent = document.getElementById('clientDetailsContent');
+    const clientActionsSection = document.getElementById('clientActionsSection'); // Seção para mostrar/esconder
     
-    const addProdutoBtn = document.getElementById('addProdutoBtn');
-    const produtosRegistradosBody = document.getElementById('produtosRegistradosBody');
+    // Elementos para Associar Produto
+    const itemProdutoSelect = document.getElementById('itemProdutoSelect');
+    const quantidadeProdutoInput = document.getElementById('quantidadeProduto');
+    const valorUnitarioProdutoInput = document.getElementById('valorUnitarioProduto');
+    const valorTotalProdutoAssocInput = document.getElementById('valorTotalProdutoAssoc');
+    const addProductToClientBtn = document.getElementById('addProductToClientBtn');
 
-    let currentClientId = null; // Armazena o ID do cliente encontrado
-    let estoqueProductsCache = []; // Para armazenar todos os produtos do estoque
+    // Elementos da Tabela de Produtos Associados ao Cliente
+    const clientAssociatedProductsBody = document.getElementById('clientAssociatedProductsBody');
 
-    // --- Funções de Lógica ---
+    let currentSelectedClient = null; // Armazena o objeto do cliente atualmente selecionado
+    let estoqueProducts = []; // Cache dos produtos do estoque para popular o select
 
-    // Função para buscar cliente por CPF
-    async function searchClientByCpf() { /* ... (mantido igual) ... */
-        const cpf = cpfClienteProdutoInput.value.trim();
-        clientStatusMessage.textContent = '';
-        nomeClienteExibicaoInput.value = '';
-        telefoneClienteExibicaoInput.value = '';
-        currentClientId = null;
+    // --- Funções de Inicialização e Utilitários ---
 
-        if (!cpf || cpf.length !== 11) {
-            clientStatusMessage.style.color = 'orange';
-            clientStatusMessage.textContent = 'Digite um CPF válido (11 dígitos).';
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_CLIENTES_URL}/cpf/${cpf}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    clientStatusMessage.style.color = 'red';
-                    clientStatusMessage.textContent = `Cliente com CPF "${cpf}" não encontrado. Cadastre-o primeiro.`;
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-                }
-                return;
-            }
-
-            const client = await response.json();
-            nomeClienteExibicaoInput.value = client.nomeCliente;
-            telefoneClienteExibicaoInput.value = client.telefone;
-            clientStatusMessage.style.color = 'green';
-            clientStatusMessage.textContent = `Cliente "${client.nomeCliente}" encontrado.`;
-            currentClientId = client.id;
-            
-        } catch (error) {
-            console.error('Erro ao pesquisar cliente:', error);
-            clientStatusMessage.style.color = 'red';
-            clientStatusMessage.textContent = `Erro ao pesquisar cliente: ${error.message}`;
-        }
+    // Limpa e exibe mensagem padrão na tabela de produtos associados
+    function clearAssociatedProductsTable(message = "Nenhum produto associado.") {
+        clientAssociatedProductsBody.innerHTML = `<tr><td colspan="7">${message}</td></tr>`;
     }
 
-    // --- NOVA FUNÇÃO: Carrega produtos do estoque para popular o select ---
-    async function populateProductSelect() {
+    // Carrega produtos do estoque para o dropdown
+    async function populateItemProdutoSelect() {
         try {
-            const response = await fetch(API_ESTOQUE_LIST_URL); // Busca ID e Produto
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            estoqueProductsCache = await response.json(); // Armazena em cache
+            const response = await fetch(API_ESTOQUE_LIST_URL);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            estoqueProducts = await response.json(); // Armazena o cache dos produtos
 
             itemProdutoSelect.innerHTML = '<option value="">Selecione um Produto</option>';
-            estoqueProductsCache.forEach(prod => {
+            estoqueProducts.forEach(prod => {
                 const option = document.createElement('option');
-                option.value = prod.id; // O valor da opção é o ID do produto
+                option.value = prod.id; // O valor é o ID do produto do estoque
                 option.textContent = prod.produto; // O texto visível é o nome do produto
                 itemProdutoSelect.appendChild(option);
             });
         } catch (error) {
-            console.error('Erro ao carregar produtos para seleção:', error);
+            console.error('Erro ao carregar produtos do estoque:', error);
             itemProdutoSelect.innerHTML = '<option value="">Erro ao carregar produtos</option>';
             itemProdutoSelect.disabled = true;
         }
     }
 
-    // --- NOVO Event Listener para o SELECT de Produto ---
-    itemProdutoSelect.addEventListener('change', () => {
-        const selectedProductId = itemProdutoSelect.value;
-        const selectedProduct = estoqueProductsCache.find(p => String(p.id) === selectedProductId); // Encontra o produto no cache
-
-        if (selectedProduct) {
-            valorUnitarioItemInput.value = selectedProduct.precoDeVenda.toFixed(2); // Preenche preço de venda
-        } else {
-            valorUnitarioItemInput.value = ''; // Limpa se nada selecionado ou opção inválida
-        }
-        calculateValorTotal(); // Recalcula o total
-    });
-
-
-    // Função para calcular o valor total
-    function calculateValorTotal() {
-        const quantidade = parseFloat(quantidadeItemInput.value) || 0;
-        const valorUnitario = parseFloat(valorUnitarioItemInput.value) || 0; // Pega do campo readonly
-        valorTotalItemInput.value = (quantidade * valorUnitario).toFixed(2);
+    // Calcula valor total ao mudar quantidade ou valor unitário no formulário de associação
+    function calculateProductAssocTotal() {
+        const quantidade = parseFloat(quantidadeProdutoInput.value) || 0;
+        const valorUnitario = parseFloat(valorUnitarioProdutoInput.value) || 0;
+        valorTotalProdutoAssocInput.value = (quantidade * valorUnitario).toFixed(2);
     }
 
-    // Event listeners para recalcular total
-    quantidadeItemInput.addEventListener('input', calculateValorTotal);
-    // valorUnitarioItemInput não precisa de event listener direto, pois é readonly e preenchido pelo select
+    // --- Funções de Pesquisa de Cliente ---
 
-    // Função para registrar o produto/venda
-    addProdutoBtn.addEventListener('click', async () => {
-        const cpfCliente = cpfClienteProdutoInput.value.trim();
-        const produtoIdEstoque = itemProdutoSelect.value; // Pega o ID do produto selecionado
-        const quantidade = parseInt(quantidadeItemInput.value);
-        const valorUnitario = parseFloat(valorUnitarioItemInput.value); // Pega o valor do campo readonly
-
-        if (!cpfCliente || !produtoIdEstoque || isNaN(quantidade) || quantidade <= 0 || isNaN(valorUnitario) || valorUnitario <= 0) {
-            alert('Por favor, preencha todos os campos corretamente (CPF do Cliente, Produto, Quantidade > 0, Valor Unitário > 0).');
+    // Renderiza os detalhes de um cliente (ou múltiplos, se for pesquisa por nome)
+    function renderClientDetails(clients) {
+        clientDetailsContent.innerHTML = '';
+        if (clients.length === 0) {
+            clientDetailsContent.innerHTML = '<p>Nenhum cliente encontrado.</p>';
+            clientActionsSection.style.display = 'none';
+            currentSelectedClient = null;
             return;
         }
+
+        // Se mais de um cliente for encontrado (pesquisa por nome), lista-os.
+        // Ações de associar produto só funcionam com um cliente selecionado.
+        if (clients.length > 1) {
+            clientDetailsContent.innerHTML = '<h3>Múltiplos Clientes Encontrados:</h3>';
+            clients.forEach(client => {
+                const clientDiv = document.createElement('div');
+                clientDiv.className = 'client-info';
+                clientDiv.innerHTML = `
+                    <p><strong>ID:</strong> ${client.id}</p>
+                    <p><strong>Nome:</strong> ${client.nomeCliente}</p>
+                    <p><strong>Telefone:</strong> ${client.telefone}</p>
+                    <p><strong>CPF:</strong> ${client.cpf}</p>
+                    <p><strong>Dívida Geral:</strong> R$ ${client.divida.toFixed(2)}</p>
+                    <button class="select-client-btn" data-client-id="${client.id}">Selecionar para ver produtos</button>
+                    <hr>
+                `;
+                clientDetailsContent.appendChild(clientDiv);
+                clientDiv.querySelector('.select-client-btn').addEventListener('click', () => selectClientForDetails(client));
+            });
+            clientActionsSection.style.display = 'none'; // Esconde seção de ações se múltiplos
+            currentSelectedClient = null;
+            return;
+        }
+
+        // Se apenas um cliente for encontrado, exibe os detalhes e mostra a seção de ações
+        const client = clients[0];
+        currentSelectedClient = client; // Define o cliente selecionado
         
-        // O backend vai buscar o nome_item e valor_unitario_vendido com base no produtoIdEstoque
-        const productData = { 
-            cpfCliente, 
-            produto_id_estoque: parseInt(produtoIdEstoque), // Envia o ID numérico para o backend
-            quantidade
-            // 'valor_unitario' não precisa ser enviado, o backend buscará o precoDeVenda
+        clientDetailsContent.innerHTML = `
+            <div class="client-info">
+                <p><strong>ID:</strong> ${client.id}</p>
+                <p><strong>Nome:</strong> ${client.nomeCliente}</p>
+                <p><strong>Telefone:</strong> ${client.telefone}</p>
+                <p><strong>CPF:</strong> ${client.cpf}</p>
+                <p><strong>Dívida Geral:</strong> R$ ${client.divida.toFixed(2)}</p>
+                <button class="edit-client-btn" data-client='${JSON.stringify(client)}'>Editar Cliente</button>
+                <button class="delete-client-btn" data-client-id="${client.id}">Excluir Cliente</button>
+            </div>
+            <hr>
+        `;
+        clientActionsSection.style.display = 'flex'; // Exibe a seção de ações
+        clientDetailsContent.querySelector('.edit-client-btn').addEventListener('click', (e) => {
+            const clientData = JSON.parse(e.target.dataset.client);
+            window.location.href = `cadastro.html?id=${clientData.id}&nome=${encodeURIComponent(clientData.nomeCliente)}&telefone=${encodeURIComponent(clientData.telefone)}&cpf=${encodeURIComponent(clientData.cpf)}&divida=${clientData.divida}`;
+        });
+        clientDetailsContent.querySelector('.delete-client-btn').addEventListener('click', () => deleteClient(client.id));
+
+        fetchClientAssociatedProducts(client.id); // Carrega os produtos associados a este cliente
+    }
+
+    // Função para selecionar um cliente da lista de múltiplos
+    function selectClientForDetails(client) {
+        renderClientDetails([client]); // Renderiza como se fosse um único cliente encontrado
+    }
+
+    // Função genérica de pesquisa
+    async function searchClients(type, query) {
+        searchResultMessage.textContent = '';
+        clientDetailsContent.innerHTML = '<p>Pesquisando...</p>';
+        clientActionsSection.style.display = 'none'; // Esconde enquanto pesquisa
+        clearAssociatedProductsTable("Carregando produtos...");
+
+        if (!query) {
+            searchResultMessage.style.color = 'orange';
+            searchResultMessage.textContent = 'Por favor, digite um valor para pesquisar.';
+            clientDetailsContent.innerHTML = '<p>Nenhum cliente selecionado para exibir detalhes.</p>';
+            return;
+        }
+
+        try {
+            let response;
+            let url;
+
+            if (type === 'cpf') {
+                if (query.length !== 11) {
+                    searchResultMessage.style.color = 'orange';
+                    searchResultMessage.textContent = 'CPF deve ter 11 dígitos.';
+                    return;
+                }
+                url = `${API_CLIENTES_URL}/cpf/${query}`;
+            } else if (type === 'nome') {
+                url = `${API_CLIENTES_URL}/nome/${encodeURIComponent(query)}`;
+            } else {
+                throw new Error('Tipo de pesquisa inválido.');
+            }
+
+            response = await fetch(url);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    searchResultMessage.style.color = 'red';
+                    searchResultMessage.textContent = `Nenhum cliente encontrado com ${type === 'cpf' ? 'o CPF' : 'o nome'} "${query}".`;
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                renderClientDetails([]); // Exibe vazio
+                return;
+            }
+
+            const clients = await response.json(); // Pode ser um objeto (cpf) ou um array (nome)
+            const clientsArray = Array.isArray(clients) ? clients : [clients]; // Garante que seja um array
+            
+            searchResultMessage.style.color = 'green';
+            searchResultMessage.textContent = `${clientsArray.length} cliente(s) encontrado(s).`;
+            renderClientDetails(clientsArray);
+
+        } catch (error) {
+            console.error(`Erro ao pesquisar cliente por ${type}:`, error);
+            searchResultMessage.style.color = 'red';
+            searchResultMessage.textContent = `Erro ao pesquisar cliente: ${error.message}`;
+            renderClientDetails([]); // Exibe vazio
+        }
+    }
+
+    // --- Funções de Associação de Produtos ---
+
+    // Lida com a seleção de um produto no dropdown e preenche o valor unitário
+    itemProdutoSelect.addEventListener('change', () => {
+        const selectedProductId = itemProdutoSelect.value;
+        const selectedProduct = estoqueProducts.find(p => String(p.id) === selectedProductId); // Comparar como string
+
+        if (selectedProduct) {
+            valorUnitarioProdutoInput.value = selectedProduct.precoDeVenda.toFixed(2);
+        } else {
+            valorUnitarioProdutoInput.value = '';
+        }
+        calculateProductAssocTotal();
+    });
+
+    quantidadeProdutoInput.addEventListener('input', calculateProductAssocTotal);
+    valorUnitarioProdutoInput.addEventListener('input', calculateProductAssocTotal);
+
+
+    // Adicionar produto ao cliente selecionado
+    addProductToClientBtn.addEventListener('click', async () => {
+        if (!currentSelectedClient) {
+            alert('Por favor, pesquise e selecione um cliente primeiro.');
+            return;
+        }
+
+        const produtoId = itemProdutoSelect.value;
+        const quantidade = parseInt(quantidadeProdutoInput.value);
+        const valorUnitario = parseFloat(valorUnitarioProdutoInput.value);
+
+        if (!produtoId || isNaN(quantidade) || quantidade <= 0 || isNaN(valorUnitario) || valorUnitario <= 0) {
+            alert('Preencha o produto, quantidade (deve ser > 0) e valor unitário (deve ser > 0) corretamente.');
+            return;
+        }
+
+        const productAssocData = {
+            cliente_id: currentSelectedClient.id,
+            produto_id: parseInt(produtoId),
+            quantidade_vendida: quantidade,
+            valor_unitario_vendido: valorUnitario
         };
 
         try {
-            const response = await fetch(API_PRODUTOS_REGISTRADOS_URL, {
+            const response = await fetch(API_CLIENTE_PRODUTOS_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(productData)
+                body: JSON.stringify(productAssocData)
             });
 
             if (!response.ok) {
@@ -145,81 +243,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
 
-            alert('Produto/Venda registrado com sucesso!');
-            clearFormProduto();
-            await fetchProdutosRegistrados(); // Recarrega a tabela de produtos registrados
+            alert('Produto associado ao cliente com sucesso!');
+            // Limpa o formulário de associação de produto
+            itemProdutoSelect.value = '';
+            quantidadeProdutoInput.value = '1';
+            valorUnitarioProdutoInput.value = '';
+            valorTotalProdutoAssocInput.value = '';
+            
+            // Recarrega a lista de produtos associados para o cliente atual
+            fetchClientAssociatedProducts(currentSelectedClient.id);
+
         } catch (error) {
-            console.error('Erro ao registrar produto/venda:', error);
-            alert('Erro ao registrar produto/venda: ' + error.message);
+            console.error('Erro ao associar produto:', error);
+            alert('Erro ao associar produto: ' + error.message);
         }
     });
 
-    // Função para limpar APENAS os campos do formulário de produto/venda
-    function clearFormProduto() {
-        cpfClienteProdutoInput.value = '';
-        nomeClienteExibicaoInput.value = '';
-        telefoneClienteExibicaoInput.value = '';
-        clientStatusMessage.textContent = '';
-        itemProdutoSelect.value = ''; // Reseta o select
-        quantidadeItemInput.value = '1';
-        valorUnitarioItemInput.value = '';
-        valorTotalItemInput.value = '';
-        currentClientId = null;
-    }
+    // --- Funções para Listar Produtos Associados ---
 
-    // --- Funções para a Tabela de Produtos Registrados (Listagem) ---
-
-    async function fetchProdutosRegistrados() {
-        produtosRegistradosBody.innerHTML = `<tr><td colspan="7" id="noProdutoRegistradoFound">Carregando registros...</td></tr>`;
+    // Busca e exibe os produtos associados a um cliente
+    async function fetchClientAssociatedProducts(clienteId) {
+        clearAssociatedProductsTable("Carregando produtos associados...");
         try {
-            const response = await fetch(API_PRODUTOS_REGISTRADOS_URL);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const produtos = await response.json();
-            renderProdutosRegistrados(produtos);
+            const response = await fetch(`${API_CLIENTES_URL}/${clienteId}/produtos`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const products = await response.json();
+            renderClientAssociatedProducts(products);
         } catch (error) {
-            console.error('Erro ao buscar produtos registrados:', error);
-            produtosRegistradosBody.innerHTML = `<tr><td colspan="7" id="noProdutoRegistradoFound" style="color: red;">Erro ao carregar registros: ${error.message}</td></tr>`;
+            console.error('Erro ao buscar produtos associados:', error);
+            clearAssociatedProductsTable(`Erro ao carregar produtos: ${error.message}`);
         }
     }
 
-    function renderProdutosRegistrados(produtos) {
-        produtosRegistradosBody.innerHTML = '';
-
-        if (produtos.length === 0) {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 7;
-            cell.id = 'noProdutoRegistradoFound';
-            cell.textContent = 'Nenhum produto registrado';
-            row.appendChild(cell);
-            produtosRegistradosBody.appendChild(row);
+    // Renderiza a tabela de produtos associados
+    function renderClientAssociatedProducts(products) {
+        clientAssociatedProductsBody.innerHTML = '';
+        if (products.length === 0) {
+            clearAssociatedProductsTable();
             return;
         }
 
-        produtos.forEach((prod) => {
+        products.forEach(prod => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${prod.id}</td>
-                <td>${prod.nomeCliente || 'N/A'} (${prod.cpf || 'N/A'})</td>
-                <td>${prod.nome_item}</td>
-                <td>${prod.quantidade}</td>
-                <td>${prod.valor_unitario.toFixed(2)}</td>
-                <td>${prod.valor_total.toFixed(2)}</td>
-                <td>${new Date(prod.data_registro).toLocaleString()}</td>
+                <td>${prod.nome_produto_estoque}</td>
+                <td>${prod.quantidade_vendida}</td>
+                <td>${prod.valor_unitario_vendido.toFixed(2)}</td>
+                <td>${prod.valor_total_item.toFixed(2)}</td>
+                <td>${new Date(prod.data_venda).toLocaleDateString()}</td>
+                <td><button class="delete-item-btn" data-assoc-id="${prod.id}">Excluir</button></td>
             `;
-            produtosRegistradosBody.appendChild(row);
+            clientAssociatedProductsBody.appendChild(row);
+            row.querySelector('.delete-item-btn').addEventListener('click', () => deleteClientProduct(prod.id));
         });
     }
 
-    // --- Event Listeners ---
+    // Deletar associação de produto
+    async function deleteClientProduct(assocId) {
+        if (confirm('Tem certeza que deseja excluir esta associação de produto do cliente?')) {
+            try {
+                const response = await fetch(`${API_CLIENTE_PRODUTOS_URL}/${assocId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                alert('Produto desassociado com sucesso!');
+                fetchClientAssociatedProducts(currentSelectedClient.id); // Recarrega a lista
+            } catch (error) {
+                console.error('Erro ao desassociar produto:', error);
+                alert('Erro ao desassociar produto: ' + error.message);
+            }
+        }
+    }
 
-    // Ao digitar no CPF do cliente, tenta buscar
-    cpfClienteProdutoInput.addEventListener('input', searchClientByCpf);
-    cpfClienteProdutoInput.addEventListener('blur', searchClientByCpf);
+    // --- Event Listeners Principais (Pesquisa) ---
+    searchCpfBtn.addEventListener('click', () => searchClients('cpf', searchCpfInput.value.trim()));
+    searchNameBtn.addEventListener('click', () => searchClients('nome', searchNameInput.value.trim()));
 
     // --- Inicialização ---
-    populateProductSelect(); // Carrega os produtos do estoque para o select
-    fetchProdutosRegistrados(); // Carrega os produtos registrados ao carregar a página
+    populateItemProdutoSelect(); // Popula o dropdown de produtos
+    clearAssociatedProductsTable(); // Limpa a tabela de produtos associados inicialmente
 });
