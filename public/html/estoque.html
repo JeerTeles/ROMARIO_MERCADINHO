@@ -6,6 +6,7 @@
     <title>Gestão de Estoque</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="/public/css/estoque.css">
 </head>
 <body>
     <div class="menu-wrapper">
@@ -27,7 +28,7 @@
             </a>
         </nav>
     </div>
-    <div class="container">
+     <div class="container">
         <div class="registration-form">
             <h2>Adicionar/Editar Item no Estoque</h2>
             <input type="text" id="produtoNome" placeholder="Nome do Produto">
@@ -53,12 +54,17 @@
                 </thead>
                 <tbody id="estoqueBody">
                     <tr>
-                        <td colspan="7" id="noEstoqueFound">Nenhum item no estoque</td>
+                        <td colspan="7" id="noEstoqueFound">Carregando itens do estoque...</td>
                     </tr>
                 </tbody>
             </table>
+
+            <div class="pagination-controls">
+                <button id="prevPageBtn" disabled>Anterior</button>
+                <span id="pageInfo">Página 1 de 1</span>
+                <button id="nextPageBtn" disabled>Próxima</button>
+            </div>
         </div>
     </div>
-
     <script src="/public/js/estoque.js"></script> </body>
 </html>

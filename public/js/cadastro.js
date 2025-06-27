@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_CLIENTES_URL = 'http://localhost:3000/api/clientes';
-    const CLIENTS_PER_PAGE = 10; // Define quantos clientes por página
+    const API_VERIFY_PASSWORD_URL = 'http://localhost:3000/api/admin/verify-password';
+    const CLIENTS_PER_PAGE = 10;
 
     // Elementos do Formulário de Cadastro/Edição
     const nomeClienteInput = document.getElementById('nomeCliente');
     const telefoneClienteInput = document.getElementById('telefoneCliente');
     const cpfClienteInput = document.getElementById('cpfCliente');
+    const dividaClienteInput = document.getElementById('dividaCliente'); // Dívida permanece
     const addRecordBtn = document.getElementById('addRecordBtn');
 
     // Elementos da Tabela de Clientes Cadastrados
@@ -14,51 +16,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPageBtn = document.getElementById('nextPageBtn');
     const pageInfoSpan = document.getElementById('pageInfo');
 
-    let editingClientId = null; // Armazena o ID do cliente sendo editado
+    let editingClientId = null;
     let currentPage = 1;
     let totalPages = 1;
 
+    // --- Função de Validação de Telefone (FRONTEND) ---
+    function validateBrazilianPhoneFrontend(phone) {
+        const cleanedPhone = String(phone).replace(/\D/g, '');
+        return (cleanedPhone.length === 10 || cleanedPhone.length === 11) && cleanedPhone !== '';
+    }
+
+    // --- Event Listener para validação visual do telefone ---
+    telefoneClienteInput.addEventListener('input', (event) => {
+        const phoneValue = event.target.value;
+        event.target.value = phoneValue.replace(/\D/g, ''); 
+
+        if (phoneValue.length > 0 && !validateBrazilianPhoneFrontend(phoneValue)) {
+            telefoneClienteInput.style.borderColor = 'red';
+            telefoneClienteInput.title = 'Formato inválido: DDD + 8 ou 9 dígitos (somente números)';
+        } else {
+            telefoneClienteInput.style.borderColor = '';
+            telefoneClienteInput.title = '';
+        }
+    });
+
     // --- Funções para a Tabela de Clientes Cadastrados (LISTAGEM + PAGINAÇÃO) ---
 
-    // Função para buscar e renderizar clientes com paginação
     async function fetchClientsPaged() {
-        clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound">Carregando clientes...</td></tr>`;
+        clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound">Carregando clientes...</td></tr>`;
 
         try {
             const response = await fetch(`${API_CLIENTES_URL}?page=${currentPage}&limit=${CLIENTS_PER_PAGE}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const result = await response.json(); // A resposta agora contém data, totalPages, etc.
+            const result = await response.json();
             
             totalPages = result.totalPages;
             renderClientsList(result.data);
             updatePaginationControls();
-            
+
         } catch (error) {
             console.error('Erro ao buscar clientes:', error);
-            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound" style="color: red;">Erro ao carregar clientes, sem servidor! </td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound" style="color: red;">Erro ao carregar clientes: ${error.message}</td></tr>`;
             pageInfoSpan.textContent = 'Erro';
             prevPageBtn.disabled = true;
             nextPageBtn.disabled = true;
         }
     }
 
-    // Função para renderizar a tabela de clientes
     function renderClientsList(clients) {
-        clientesListBody.innerHTML = ''; // Limpa as linhas existentes
+        clientesListBody.innerHTML = '';
 
         if (clients.length === 0) {
-            clientesListBody.innerHTML = `<tr><td colspan="6" id="noClientFound">Nenhum cliente cadastrado.</td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound">Nenhum cliente cadastrado.</td></tr>`;
             return;
         }
 
         clients.forEach((client) => {
             const row = document.createElement('tr');
 
-            /*const idCell = document.createElement('td');
+            const idCell = document.createElement('td');
             idCell.textContent = client.id;
-            row.appendChild(idCell);*/
+            row.appendChild(idCell);
 
             const nomeCell = document.createElement('td');
             nomeCell.textContent = client.nomeCliente;
@@ -72,11 +92,27 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfCell.textContent = client.cpf;
             row.appendChild(cpfCell);
 
+            // Item (agora vem como nomeProdutoItem ou ID numérico)
+            const itemCell = document.createElement('td');
+            // Se nomeProdutoItem existe (do JOIN), usa. Senão, mostra o ID ou "N/A"
+            itemCell.textContent = client.nomeProdutoItem || (client.item === 0 ? 'N/A' : client.item);
+            row.appendChild(itemCell);
+
+            // Quantidade (diretamente do cliente)
+            const quantidadeCell = document.createElement('td');
+            quantidadeCell.textContent = client.quantidade;
+            row.appendChild(quantidadeCell);
+
+            const dividaCell = document.createElement('td');
+            dividaCell.textContent = client.divida.toFixed(2);
+            row.appendChild(dividaCell);
+
+
             const editCell = document.createElement('td');
             const editButton = document.createElement('button');
             editButton.textContent = 'Editar';
             editButton.classList.add('edit-btn');
-            editButton.addEventListener('click', () => editRecord(client)); // Chama editRecord para preencher o formulário
+            editButton.addEventListener('click', () => editRecord(client));
             editCell.appendChild(editButton);
             row.appendChild(editCell);
 
@@ -92,14 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Função para atualizar o estado dos botões de paginação e info
     function updatePaginationControls() {
         pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
         prevPageBtn.disabled = currentPage === 1;
         nextPageBtn.disabled = currentPage === totalPages;
     }
 
-    // Event Listeners para os botões de paginação
     prevPageBtn.addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
@@ -117,30 +151,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funções do Formulário de Cadastro/Edição ---
 
-    // Função para adicionar ou atualizar cliente
     addRecordBtn.addEventListener('click', async () => {
         const nomeCliente = nomeClienteInput.value.trim();
-        const telefoneCliente = telefoneClienteInput.value.trim();
+        const telefoneInputVal = telefoneClienteInput.value.trim();
         const cpfCliente = cpfClienteInput.value.trim();
+        const dividaCliente = dividaClienteInput.value.trim(); // Dívida é informada no cadastro
 
-        if (!nomeCliente || !telefoneCliente || !cpfCliente) {
-            alert('Por favor, preencha todos os campos (Nome, Telefone, CPF).');
+        if (!validateBrazilianPhoneFrontend(telefoneInputVal)) {
+            alert('Por favor, insira um telefone válido no formato (DDD + 8 ou 9 dígitos numéricos).');
+            telefoneClienteInput.focus();
             return;
         }
 
-        const clientData = { nomeCliente, telefone: telefoneCliente, cpf: cpfCliente };
+        const telefone = telefoneInputVal; 
+
+        if (!nomeCliente || !telefone || !cpfCliente || dividaCliente === '') {
+            alert('Por favor, preencha todos os campos (Nome, Telefone, CPF, Dívida).');
+            return;
+        }
+
+        // Validação de número para dívida
+        if (isNaN(parseFloat(dividaCliente)) || parseFloat(dividaCliente) < 0) {
+            alert('Dívida deve ser um número não negativo válido.');
+            return;
+        }
+
+        const clientData = {
+            nomeCliente,
+            telefone,
+            cpf: cpfCliente,
+            // item e quantidade NÃO são enviados daqui, o backend usará 0 por padrão
+            divida: parseFloat(dividaCliente)
+        };
 
         try {
             let response;
             if (editingClientId === null) {
-                // Adicionar novo cliente (POST)
                 response = await fetch(API_CLIENTES_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(clientData)
                 });
             } else {
-                // Atualizar cliente existente (PUT)
                 response = await fetch(`${API_CLIENTES_URL}/${editingClientId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -154,10 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             clearForm();
-            editingClientId = null; // Reseta o modo de edição
+            editingClientId = null;
             addRecordBtn.textContent = 'Adicionar Cliente';
-            alert('Cliente cadastrado com sucesso!');
-            currentPage = 1; // Volta para a primeira página após adicionar/editar
+            alert('Operação realizada com sucesso!');
+            currentPage = 1;
             await fetchClientsPaged(); // Recarrega a tabela após a operação
 
         } catch (error) {
@@ -166,20 +218,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Função para preencher o formulário para edição
-    function editRecord(client) {
-        nomeClienteInput.value = client.nomeCliente;
-        telefoneClienteInput.value = client.telefone;
-        cpfClienteInput.value = client.cpf;
-        // cpfClienteInput.readOnly = true; // Opcional: Impedir edição do CPF ao entrar no modo de edição
-        addRecordBtn.textContent = 'Salvar Edição';
-        editingClientId = client.id;
+    async function editRecord(client) {
+        const password = prompt("Para editar, por favor, insira a senha de administrador (Padrão: 123456):");
+        if (!password) {
+            alert("Edição cancelada. Senha não fornecida.");
+            return;
+        }
+
+        try {
+            const response = await fetch(API_VERIFY_PASSWORD_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            // Senha correta, prosseguir com a edição
+            nomeClienteInput.value = client.nomeCliente;
+            telefoneClienteInput.value = client.telefone;
+            cpfClienteInput.value = client.cpf;
+            dividaClienteInput.value = client.divida; // Dívida
+
+            // item e quantidade não são preenchidos no formulário de cadastro/edição
+            // itemClienteSelect.value = '';
+            // quantidadeClienteInput.value = '';
+
+            telefoneClienteInput.style.borderColor = '';
+            telefoneClienteInput.title = '';
+            addRecordBtn.textContent = 'Salvar Edição';
+            editingClientId = client.id;
+
+        } catch (error) {
+            console.error('Erro na verificação da senha:', error);
+            alert('Falha na verificação da senha: ' + error.message + '\nPor favor, tente novamente.');
+        }
     }
 
-    // Função para excluir um cliente
     async function deleteRecord(id) {
-        if (confirm('Tem certeza que deseja excluir este cliente?')) {
-            try {
+        const password = prompt("Para EXCLUIR, por favor, insira a senha de administrador (Padrão: 123456):");
+        if (!password) {
+            alert("Exclusão cancelada. Senha não fornecida.");
+            return;
+        }
+
+        try {
+            const verifyResponse = await fetch(API_VERIFY_PASSWORD_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+
+            if (!verifyResponse.ok) {
+                const errorData = await verifyResponse.json();
+                throw new Error(errorData.message || `HTTP error! status: ${verifyResponse.status}`);
+            }
+
+            // Senha correta, prosseguir com a exclusão
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
                 const response = await fetch(`${API_CLIENTES_URL}/${id}`, {
                     method: 'DELETE'
                 });
@@ -190,29 +289,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 alert('Cliente excluído com sucesso!');
-                if (editingClientId === id) { // Se o cliente sendo editado for excluído
+                if (editingClientId === id) {
                     clearForm();
                     editingClientId = null;
                     addRecordBtn.textContent = 'Adicionar Cliente';
-                    // cpfClienteInput.readOnly = false;
                 }
-                currentPage = 1; // Volta para a primeira página após excluir
-                await fetchClientsPaged(); // Recarrega a tabela após a exclusão
-            } catch (error) {
-                console.error('Erro ao excluir cliente:', error);
-                alert('Erro ao excluir cliente: ' + error.message);
+                currentPage = 1;
+                await fetchClientsPaged();
             }
+
+        } catch (error) {
+            console.error('Erro na verificação da senha ou exclusão:', error);
+            alert('Falha na exclusão: ' + error.message + '\nPor favor, tente novamente.');
         }
     }
 
-    // Função para limpar o formulário
     function clearForm() {
         nomeClienteInput.value = '';
         telefoneClienteInput.value = '';
         cpfClienteInput.value = '';
-        // cpfClienteInput.readOnly = false;
+        dividaClienteInput.value = '';
+        telefoneClienteInput.style.borderColor = '';
+        telefoneClienteInput.title = '';
     }
 
-    // Carrega a primeira página de clientes ao iniciar
     fetchClientsPaged();
 });

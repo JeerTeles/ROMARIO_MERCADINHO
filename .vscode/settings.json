@@ -1,0 +1,29 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "Requesitos.md": false,
+        "Readme": true,
+        "package.json": true,
+        "package-lock.json": true,
+        "banner.png": true,
+        ".gitignore": true,
+        "server": false,
+        "public": false,
+        "node_modules": true
+    },
+    "hide-files.files": [
+        "Requesitos.md",
+        "Readme",
+        "package.json",
+        "package-lock.json",
+        "banner.png",
+        ".gitignore",
+        "server",
+        "public",
+        "node_modules"
+    ]
+}
