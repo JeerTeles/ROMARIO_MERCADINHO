@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções para a Tabela de Clientes Cadastrados (LISTAGEM + PAGINAÇÃO) ---
 
     async function fetchClientsPaged() {
-        clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound">Carregando clientes...</td></tr>`;
+        clientesListBody.innerHTML = `<tr><td colspan="8" id="noClientFound">Carregando clientes...</td></tr>`; // colspan ajustado
 
         try {
             const response = await fetch(`${API_CLIENTES_URL}?page=${currentPage}&limit=${CLIENTS_PER_PAGE}`);
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Erro ao buscar clientes:', error);
-            clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound" style="color: red;">Erro ao carregar clientes: ${error.message}</td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="8" id="noClientFound" style="color: red;">Erro ao carregar clientes: ${error.message}</td></tr>`; // colspan ajustado
             pageInfoSpan.textContent = 'Erro';
             prevPageBtn.disabled = true;
             nextPageBtn.disabled = true;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clientesListBody.innerHTML = '';
 
         if (clients.length === 0) {
-            clientesListBody.innerHTML = `<tr><td colspan="9" id="noClientFound">Nenhum cliente cadastrado.</td></tr>`;
+            clientesListBody.innerHTML = `<tr><td colspan="8" id="noClientFound">Nenhum cliente cadastrado.</td></tr>`; // colspan ajustado
             return;
         }
 
@@ -92,20 +92,21 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfCell.textContent = client.cpf;
             row.appendChild(cpfCell);
 
-            // Item (agora vem como nomeProdutoItem ou ID numérico)
-            const itemCell = document.createElement('td');
-            // Se nomeProdutoItem existe (do JOIN), usa. Senão, mostra o ID ou "N/A"
-            itemCell.textContent = client.nomeProdutoItem || (client.item === 0 ? 'N/A' : client.item);
-            row.appendChild(itemCell);
-
-            // Quantidade (diretamente do cliente)
-            const quantidadeCell = document.createElement('td');
-            quantidadeCell.textContent = client.quantidade;
-            row.appendChild(quantidadeCell);
-
             const dividaCell = document.createElement('td');
             dividaCell.textContent = client.divida.toFixed(2);
             row.appendChild(dividaCell);
+
+            // Coluna para exibir a quantidade de itens associados
+            const itensAssociadosCell = document.createElement('td');
+            let itensCount = 0;
+            try {
+                const itensArray = JSON.parse(client.itens_associados || '[]');
+                itensCount = itensArray.length;
+            } catch (e) {
+                console.error("Erro ao parsear itens_associados:", e);
+            }
+            itensAssociadosCell.textContent = `${itensCount} item(s)`;
+            row.appendChild(itensAssociadosCell);
 
 
             const editCell = document.createElement('td');
@@ -155,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nomeCliente = nomeClienteInput.value.trim();
         const telefoneInputVal = telefoneClienteInput.value.trim();
         const cpfCliente = cpfClienteInput.value.trim();
-        const dividaCliente = dividaClienteInput.value.trim(); // Dívida é informada no cadastro
+        const dividaCliente = dividaClienteInput.value.trim();
 
         if (!validateBrazilianPhoneFrontend(telefoneInputVal)) {
             alert('Por favor, insira um telefone válido no formato (DDD + 8 ou 9 dígitos numéricos).');
@@ -170,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Validação de número para dívida
         if (isNaN(parseFloat(dividaCliente)) || parseFloat(dividaCliente) < 0) {
             alert('Dívida deve ser um número não negativo válido.');
             return;
@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
             nomeCliente,
             telefone,
             cpf: cpfCliente,
-            // item e quantidade NÃO são enviados daqui, o backend usará 0 por padrão
             divida: parseFloat(dividaCliente)
+            // itens_associados não são enviados daqui, o backend usará '[]' por padrão
         };
 
         try {
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addRecordBtn.textContent = 'Adicionar Cliente';
             alert('Operação realizada com sucesso!');
             currentPage = 1;
-            await fetchClientsPaged(); // Recarrega a tabela após a operação
+            await fetchClientsPaged();
 
         } catch (error) {
             console.error('Erro ao salvar cliente:', error);
@@ -241,11 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nomeClienteInput.value = client.nomeCliente;
             telefoneClienteInput.value = client.telefone;
             cpfClienteInput.value = client.cpf;
-            dividaClienteInput.value = client.divida; // Dívida
-
-            // item e quantidade não são preenchidos no formulário de cadastro/edição
-            // itemClienteSelect.value = '';
-            // quantidadeClienteInput.value = '';
+            dividaClienteInput.value = client.divida;
 
             telefoneClienteInput.style.borderColor = '';
             telefoneClienteInput.title = '';

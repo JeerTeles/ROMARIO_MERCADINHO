@@ -35,7 +35,7 @@
             <input type="tel" id="telefoneCliente" placeholder="Telefone">
             <input type="text" id="cpfCliente" placeholder="CPF" maxlength="11">
             
-            <!-- CAMPO DIVIDA PERMANECE AQUI -->
+            <!-- Apenas dívida, se for uma dívida GERAL do cliente -->
             <input type="number" id="dividaCliente" placeholder="Dívida Geral" min="0" step="0.01">
 
             <button id="addRecordBtn">Adicionar Cliente</button>
@@ -50,16 +50,15 @@
                         <th>Nome</th>
                         <th>Telefone</th>
                         <th>CPF</th>
-                        <th>Item</th>         
-                        <th>Quantidade</th>   
                         <th>Dívida</th>
+                        <th>Itens (Qtd.)</th> <!-- Nova coluna para resumo de itens -->
                         <th>Editar</th>
                         <th>Excluir</th>
                     </tr>
                 </thead>
                 <tbody id="clientesListBody">
                     <tr>
-                        <td colspan="9" id="noClientFound">Carregando clientes...</td>
+                        <td colspan="8" id="noClientFound">Carregando clientes...</td>
                     </tr>
                 </tbody>
             </table>

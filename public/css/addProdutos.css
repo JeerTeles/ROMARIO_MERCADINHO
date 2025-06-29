@@ -15,3 +15,115 @@
     width: 100%;
     height: 100vh;
 }
+
+.client-details-section, .add-product-section, .client-products-list {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+.client-details-section, .add-product-section, .client-products-list {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+.client-info p {
+    margin: 5px 0;
+    font-size: 1.1em;
+}
+
+.client-info strong {
+    color: #555;
+}
+
+.add-product-section .form-group {
+    margin-bottom: 15px;
+}
+
+.add-product-section input, .add-product-section select, .add-product-section button {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 5px; /* Menor margem entre elementos de formulário */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.add-product-section button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.add-product-section button:hover {
+    background-color: #218838;
+}
+
+.client-products-list table {
+    margin-top: 15px;
+}
+
+.client-products-list th, .client-products-list td {
+    padding: 8px;
+    font-size: 0.95em;
+}
+
+.client-products-list .delete-item-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.client-products-list .delete-item-btn:hover {
+    background-color: #c82333;
+}
+
+.client-search-results {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    max-height: 150px; /* Limita altura */
+    overflow-y: auto; /* Adiciona scroll se exceder */
+}
+
+.client-search-results div {
+    padding: 5px 0;
+    border-bottom: 1px dashed #ced4da;
+    cursor: pointer;
+}
+
+.client-search-results div:last-child {
+    border-bottom: none;
+}
+
+.client-search-results div:hover {
+    background-color: #dee2e6;
+}
+
+/* Estilo para a lista de itens associados dentro dos detalhes do cliente */
+.associated-items-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+.associated-items-details li {
+    background-color: #e2e6ea;
+    padding: 5px 10px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
