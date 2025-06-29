@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta</title>
+    <title>Adicionar Produtos/Vendas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link rel="stylesheet" href="/public/css/consulta.css">
+    <link rel="stylesheet" href="/public/css/addProdutos.css">
 </head>
 <body>
     <div class="menu-wrapper">
@@ -17,7 +17,7 @@
             <a href="cadastro.html" class="menu-item cadastro-item">
                 <i class="fas fa-user-plus"></i> Cadastro
             </a>
-            <a href="consulta.html" class="menu-item consulta-item">
+            <a href="consutarUsuario.html" class="menu-item consulta-item">
                 <i class="fas fa-search"></i> Consulta
             </a>
             <a href="adicionarProdutos.html" class="menu-item adicionar-produtos-item">
@@ -58,7 +58,8 @@
     <!-- Seção de Adicionar Produtos e Listar Produtos do Cliente Selecionado -->
     <div id="clientActionsSection" class="container" style="display: none; flex-direction: column;">
         
-        <div class="add-product-section">
+        <!-- Formulário de adição de produto, inicialmente oculto -->
+        <div id="addProductSection" class="add-product-section" style="display: none;"> 
             <h3>Associar Novo Produto ao Cliente</h3>
             <div class="form-group">
                 <label for="itemProdutoSelect">Produto:</label>
@@ -84,6 +85,7 @@
         <div class="client-products-list">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>Produtos Associados a Este Cliente</h3>
+                <!-- NOVO BOTÃO AQUI -->
                 <button id="toggleAddProductFormBtn" style="background-color: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">+ Adicionar Item</button>
             </div>
             <table>
@@ -106,6 +108,6 @@
         </div>
     </div>
 
-    <script src="/public/js/consulta.js"></script> 
+    <script src="/public/js/consutarUsuario.js"></script>
 </body>
 </html>
