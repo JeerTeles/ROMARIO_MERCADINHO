@@ -1,7 +1,7 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
-const bcrypt = require('bcryptjs'); // Certifique-se de ter 'bcryptjs' instalado (npm install bcryptjs)
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 3000;
@@ -25,35 +25,21 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
     } else {
         console.log('Conectado ao banco de dados SQLite.');
 
-        // Criação da Tabela 'clientes'
+        // --- Criação da Tabela 'clientes' (com 'itens_associados' como TEXT JSON) ---
         db.run(`CREATE TABLE IF NOT EXISTS clientes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nomeCliente TEXT NOT NULL,
             telefone TEXT NOT NULL,
             cpf TEXT UNIQUE NOT NULL,
-            item INTEGER DEFAULT 0,
-            quantidade INTEGER DEFAULT 0,
-            divida REAL DEFAULT 0.0
+            divida REAL DEFAULT 0.0,
+            itens_associados TEXT DEFAULT '[]' -- Armazenará um JSON array de {produto_nome, quantidade, preco_venda_unitario}
         )`, (err) => {
             if (err) { console.error('Erro ao criar tabela "clientes":', err.message); } else { console.log('Tabela "clientes" criada ou já existe.'); }
         });
 
-        // Tabela 'cliente_produtos'
-        db.run(`CREATE TABLE IF NOT EXISTS cliente_produtos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cliente_id INTEGER NOT NULL,
-            produto_id INTEGER NOT NULL,
-            quantidade_vendida INTEGER NOT NULL,
-            valor_unitario_vendido REAL NOT NULL,
-            valor_total_item REAL NOT NULL,
-            data_venda TEXT NOT NULL,
-            FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
-            FOREIGN KEY (produto_id) REFERENCES estoque(id) ON DELETE RESTRICT
-        )`, (err) => {
-            if (err) { console.error('Erro ao criar tabela "cliente_produtos":', err.message); } else { console.log('Tabela "cliente_produtos" criada ou já existe.'); }
-        });
+        // Tabela 'cliente_produtos' REMOVIDA (pois será substituída por itens_associados no clientes)
 
-        // Tabela 'produtos_registrados'
+        // Tabela 'produtos_registrados' (mantida como estava)
         db.run(`CREATE TABLE IF NOT EXISTS produtos_registrados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente_id INTEGER NOT NULL,
@@ -67,7 +53,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) { console.error('Erro ao criar tabela "produtos_registrados":', err.message); } else { console.log('Tabela "produtos_registrados" criada ou já existe.'); }
         });
 
-        // Tabela 'estoque'
+        // Tabela 'estoque' (existente)
         db.run(`CREATE TABLE IF NOT EXISTS estoque (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             produto TEXT NOT NULL UNIQUE,
@@ -78,7 +64,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) { console.error('Erro ao criar tabela "estoque":', err.message); } else { console.log('Tabela "estoque" criada ou já existe.'); }
         });
 
-        // Tabela 'administrador'
+        // Tabela 'administrador' (existente, para verificação de senha)
         db.run(`CREATE TABLE IF NOT EXISTS administrador (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             senha_hash TEXT NOT NULL
@@ -107,20 +93,24 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
 });
 
 // --- Rotas da API para Clientes ---
+
+// Obter todos os clientes com paginação (agora seleciona itens_associados)
 app.get('/api/clientes', (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
+
     let totalClients = 0;
+
     db.get('SELECT COUNT(*) AS count FROM clientes', [], (err, row) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         totalClients = row.count;
+
+        // Selecionando itens_associados
         const sql = `
             SELECT 
-                c.id, c.nomeCliente, c.telefone, c.cpf, c.item, c.quantidade, c.divida,
-                e.produto AS nomeProdutoItem
-            FROM clientes c
-            LEFT JOIN estoque e ON c.item = e.id
+                id, nomeCliente, telefone, cpf, divida, itens_associados
+            FROM clientes
             LIMIT ? OFFSET ?
         `;
         db.all(sql, [limit, offset], (err, rows) => {
@@ -129,47 +119,39 @@ app.get('/api/clientes', (req, res) => {
         });
     });
 });
+
+// Rota para buscar cliente por CPF (agora seleciona itens_associados)
 app.get('/api/clientes/cpf/:cpf', (req, res) => {
     const cpf = req.params.cpf;
-    const sql = `
-        SELECT
-            c.id, c.nomeCliente, c.telefone, c.cpf, c.item, c.quantidade, c.divida,
-            e.produto AS nomeProdutoItem
-        FROM clientes c
-        LEFT JOIN estoque e ON c.item = e.id
-        WHERE c.cpf = ?
-    `;
-    db.get(sql, [cpf], (err, row) => {
+    db.get('SELECT id, nomeCliente, telefone, cpf, divida, itens_associados FROM clientes WHERE cpf = ?', [cpf], (err, row) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         if (!row) { res.status(404).json({ message: 'Cliente não encontrado com este CPF.' }); } else { res.json(row); }
     });
 });
+
+// Rota para buscar clientes por nome (agora seleciona itens_associados)
 app.get('/api/clientes/nome/:nome', (req, res) => {
     const nome = req.params.nome;
-    const sql = `
-        SELECT
-            c.id, c.nomeCliente, c.telefone, c.cpf, c.item, c.quantidade, c.divida,
-            e.produto AS nomeProdutoItem
-        FROM clientes c
-        LEFT JOIN estoque e ON c.item = e.id
-        WHERE c.nomeCliente LIKE ?
-    `;
-    db.all(sql, [`%${nome}%`], (err, rows) => {
+    db.all('SELECT id, nomeCliente, telefone, cpf, divida, itens_associados FROM clientes WHERE nomeCliente LIKE ?', [`%${nome}%`], (err, rows) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         if (rows.length === 0) { res.status(404).json({ message: 'Nenhum cliente encontrado com este nome.' }); } else { res.json(rows); }
     });
 });
+
+// Adicionar um novo cliente (define itens_associados como array JSON vazio)
 app.post('/api/clientes', (req, res) => {
     let { nomeCliente, telefone, cpf, divida } = req.body;
+
     telefone = String(telefone).replace(/\D/g, '');
     divida = parseFloat(divida) || 0.0;
-    const item = 0; // Valor padrão
-    const quantidade = 0; // Valor padrão
+    const itens_associados = '[]'; // Padrão: array JSON vazio
+
     if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Os campos obrigatórios (Nome, Telefone, CPF) são necessários.' }); }
     if (!isValidBrazilianPhone(telefone)) { return res.status(400).json({ error: 'Formato de telefone inválido. Use DDD + 8 ou 9 dígitos (somente números).' }); }
     if (isNaN(divida) || divida < 0) { return res.status(400).json({ error: 'Dívida deve ser um número não negativo válido.' }); }
-    db.run(`INSERT INTO clientes (nomeCliente, telefone, cpf, item, quantidade, divida) VALUES (?, ?, ?, ?, ?, ?)`,
-        [nomeCliente, telefone, cpf, item, quantidade, divida],
+
+    db.run(`INSERT INTO clientes (nomeCliente, telefone, cpf, divida, itens_associados) VALUES (?, ?, ?, ?, ?)`,
+        [nomeCliente, telefone, cpf, divida, itens_associados],
         function (err) {
             if (err) {
                 if (err.message.includes('UNIQUE constraint failed: clientes.cpf')) { return res.status(409).json({ error: 'CPF já cadastrado. O CPF deve ser único.' }); }
@@ -179,24 +161,32 @@ app.post('/api/clientes', (req, res) => {
         }
     );
 });
+
+// Atualizar um cliente existente (pode atualizar itens_associados)
 app.put('/api/clientes/:id', (req, res) => {
     const { id } = req.params;
-    let { nomeCliente, telefone, cpf, item, quantidade, divida } = req.body;
+    // Aceita itens_associados do body. Se não vier, será preenchido na busca abaixo
+    let { nomeCliente, telefone, cpf, divida, itens_associados } = req.body;
+
     telefone = String(telefone).replace(/\D/g, '');
     divida = parseFloat(divida) || 0.0;
+
     if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Os campos obrigatórios (Nome, Telefone, CPF) são necessários.' }); }
     if (!isValidBrazilianPhone(telefone)) { return res.status(400).json({ error: 'Formato de telefone inválido. Use DDD + 8 ou 9 dígitos (somente números).' }); }
     if (isNaN(divida) || divida < 0) { return res.status(400).json({ error: 'Dívida deve ser um número não negativo válido.' }); }
 
-    db.get('SELECT item, quantidade FROM clientes WHERE id = ?', [id], (err, currentClient) => {
+    // Busca o cliente atual para obter o valor de itens_associados se não for fornecido no body
+    db.get('SELECT itens_associados FROM clientes WHERE id = ?', [id], (err, currentClient) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         if (!currentClient) { res.status(404).json({ error: 'Cliente não encontrado.' }); return; }
 
-        const updatedItem = (item !== undefined && item !== null) ? parseInt(item) || 0 : currentClient.item;
-        const updatedQuantidade = (quantidade !== undefined && quantidade !== null) ? parseInt(quantidade) || 0 : currentClient.quantidade;
+        // Use o itens_associados do body se for uma string JSON válida, caso contrário, preserve o do banco de dados
+        const updatedItensAssociados = (typeof itens_associados === 'string' && (itens_associados.startsWith('[') && itens_associados.endsWith(']')))
+                                       ? itens_associados
+                                       : currentClient.itens_associados;
 
-        db.run(`UPDATE clientes SET nomeCliente = ?, telefone = ?, cpf = ?, item = ?, quantidade = ?, divida = ? WHERE id = ?`,
-            [nomeCliente, telefone, cpf, updatedItem, updatedQuantidade, divida, id],
+        db.run(`UPDATE clientes SET nomeCliente = ?, telefone = ?, cpf = ?, divida = ?, itens_associados = ? WHERE id = ?`,
+            [nomeCliente, telefone, cpf, divida, updatedItensAssociados, id],
             function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE constraint failed: clientes.cpf')) { return res.status(409).json({ error: 'CPF já cadastrado para outro cliente. O CPF deve ser único.' }); }
@@ -206,7 +196,101 @@ app.put('/api/clientes/:id', (req, res) => {
             }
         );
     });
+})
+
+// --- NOVAS ROTAS PARA GERENCIAR ITENS ASSOCIADOS AO CLIENTE (diretamente no campo 'itens_associados') ---
+
+// POST: Adicionar um item à lista de itens_associados de um cliente
+app.post('/api/clientes/:id/itens', (req, res) => {
+    const clientId = req.params.id;
+    const { produto_id, quantidade } = req.body; // Recebe o ID do produto do estoque e a quantidade
+
+    if (!produto_id || !quantidade || quantidade <= 0) {
+        return res.status(400).json({ error: 'Produto (ID) e quantidade (> 0) são obrigatórios.' });
+    }
+
+    // 1. Busca o cliente para obter sua lista atual de itens_associados
+    db.get('SELECT itens_associados FROM clientes WHERE id = ?', [clientId], (err, clientRow) => {
+        if (err) { console.error('Erro ao buscar cliente para adicionar item:', err.message); res.status(500).json({ error: 'Erro interno ao buscar cliente.' }); return; }
+        if (!clientRow) { return res.status(404).json({ message: 'Cliente não encontrado.' }); }
+
+        let itens = [];
+        try {
+            itens = JSON.parse(clientRow.itens_associados || '[]'); // Parseia o JSON, ou inicia com array vazio
+        } catch (e) {
+            console.error('Erro ao parsear itens_associados do cliente:', e);
+            itens = []; // Reseta se o JSON estiver corrompido
+        }
+        
+        // 2. Busca os detalhes do produto do estoque para obter o NOME e o precoDeVenda
+        db.get('SELECT produto, precoDeVenda FROM estoque WHERE id = ?', [produto_id], (err, productRow) => {
+            if (err) { console.error('Erro ao buscar produto do estoque:', err.message); res.status(500).json({ error: 'Erro interno ao buscar produto.' }); return; }
+            if (!productRow) { return res.status(404).json({ message: 'Produto não encontrado no estoque.' }); }
+
+            const newItem = {
+                // Geramos um ID único para o item dentro do array (timestamp)
+                // Isso é para que possamos remover itens individualmente do array
+                id: Date.now(), 
+                produto_id: productRow.id, // Guarda o ID do estoque para referência, se necessário
+                nome: productRow.produto,
+                quantidade: quantidade,
+                preco_venda_unitario: productRow.precoDeVenda // Guarda o preço de venda no momento da associação
+            };
+
+            itens.push(newItem); // Adiciona o novo item
+            const updatedItensAssociados = JSON.stringify(itens); // Converte de volta para string JSON
+
+            // 3. Atualiza o registro do cliente com a nova lista de itens
+            db.run('UPDATE clientes SET itens_associados = ? WHERE id = ?', [updatedItensAssociados, clientId], function(err) {
+                if (err) { console.error('Erro ao atualizar cliente com novo item:', err.message); res.status(500).json({ error: 'Erro ao salvar item no cliente.' }); return; }
+                res.status(200).json({ message: 'Item adicionado ao cliente com sucesso.', item: newItem });
+            });
+        });
+    });
 });
+
+
+// DELETE: Remover um item da lista itens_associados de um cliente
+app.delete('/api/clientes/:cliente_id/itens/:item_id_in_array', (req, res) => {
+    const clientId = req.params.cliente_id;
+    const itemIdInArray = parseInt(req.params.item_id_in_array); // O ID único gerado (timestamp)
+
+    if (isNaN(itemIdInArray)) {
+        return res.status(400).json({ error: 'ID do item inválido para remoção.' });
+    }
+
+    db.get('SELECT itens_associados FROM clientes WHERE id = ?', [clientId], (err, clientRow) => {
+        if (err) { console.error('Erro ao buscar cliente para remover item:', err.message); res.status(500).json({ error: 'Erro interno ao buscar cliente.' }); return; }
+        if (!clientRow) { return res.status(404).json({ message: 'Cliente não encontrado.' }); }
+
+        let itens = [];
+        try {
+            itens = JSON.parse(clientRow.itens_associados || '[]');
+        } catch (e) {
+            console.error('Erro ao parsear itens_associados do cliente para remoção:', e);
+            itens = [];
+        }
+
+        const initialLength = itens.length;
+        // Filtra o item a ser removido pelo seu ID único dentro do array
+        const updatedItens = itens.filter(item => item.id !== itemIdInArray);
+
+        if (updatedItens.length === initialLength) {
+            return res.status(404).json({ message: 'Item não encontrado na lista do cliente.' });
+        }
+
+        const updatedItensAssociados = JSON.stringify(updatedItens);
+
+        db.run('UPDATE clientes SET itens_associados = ? WHERE id = ?', [updatedItensAssociados, clientId], function(err) {
+            if (err) { console.error('Erro ao atualizar cliente após remover item:', err.message); res.status(500).json({ error: 'Erro ao remover item do cliente.' }); return; }
+            res.status(200).json({ message: 'Item removido do cliente com sucesso.' });
+        });
+    });
+});
+
+
+// Fim da implementação teste
+
 app.delete('/api/clientes/:id', (req, res) => {
     const { id } = req.params;
     db.run(`DELETE FROM clientes WHERE id = ?`, id, function (err) {
