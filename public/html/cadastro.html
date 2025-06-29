@@ -28,6 +28,7 @@
             </a>
         </nav>
     </div>
+    <!--
     <div class="container">
         <div class="registration-form">
             <h2>Cadastro e Edição de Clientes</h2>
@@ -35,7 +36,7 @@
             <input type="tel" id="telefoneCliente" placeholder="Telefone">
             <input type="text" id="cpfCliente" placeholder="CPF" maxlength="11">
             
-            <!-- Apenas dívida, se for uma dívida GERAL do cliente -->
+          
             <input type="number" id="dividaCliente" placeholder="Dívida Geral" min="0" step="0.01">
 
             <button id="addRecordBtn">Adicionar Cliente</button>
@@ -51,7 +52,7 @@
                         <th>Telefone</th>
                         <th>CPF</th>
                         <th>Dívida</th>
-                        <th>Itens (Qtd.)</th> <!-- Nova coluna para resumo de itens -->
+                        <th>Itens (Qtd.)</th>
                         <th>Editar</th>
                         <th>Excluir</th>
                     </tr>
@@ -70,6 +71,50 @@
             </div>
         </div>
     </div>
+    -->
+
+    <div class="container">
+        <div class="registration-form">
+            <h2>Cadastro e Edição de Clientes</h2>
+            <input type="text" id="nomeCliente" placeholder="Nome do Cliente">
+            <input type="tel" id="telefoneCliente" placeholder="Telefone">
+            <input type="text" id="cpfCliente" placeholder="CPF" maxlength="11">
+            
+            <!-- CAMPO DIVIDA REMOVIDO DO FORMULÁRIO -->
+
+            <button id="addRecordBtn">Adicionar Cliente</button>
+        </div>
+
+        <div class="records-table">
+            <h2>Clientes Cadastrados</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>CPF</th>
+                        <th>Dívida</th>
+                        <th>Itens (Qtd.)</th>
+                        <th>Editar</th>
+                        <th>Excluir</th>
+                    </tr>
+                </thead>
+                <tbody id="clientesListBody">
+                    <tr>
+                        <td colspan="8" id="noClientFound">Carregando clientes...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination-controls">
+                <button id="prevPageBtn" disabled>Anterior</button>
+                <span id="pageInfo">Página 1 de 1</span>
+                <button id="nextPageBtn" disabled>Próxima</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/public/js/cadastro.js"></script>
 </body>
 </html>
