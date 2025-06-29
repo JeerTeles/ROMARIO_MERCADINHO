@@ -58,7 +58,8 @@
     <!-- Seção de Adicionar Produtos e Listar Produtos do Cliente Selecionado -->
     <div id="clientActionsSection" class="container" style="display: none; flex-direction: column;">
         
-        <div class="add-product-section">
+        <!-- Formulário de adição de produto, inicialmente oculto -->
+        <div id="addProductSection" class="add-product-section" style="display: none;"> 
             <h3>Associar Novo Produto ao Cliente</h3>
             <div class="form-group">
                 <label for="itemProdutoSelect">Produto:</label>
@@ -82,30 +83,30 @@
         </div>
 
         <div class="client-products-list">
-            <h3>Produtos Associados a Este Cliente</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Produtos Associados a Este Cliente</h3>
+                <!-- NOVO BOTÃO AQUI -->
+                <button id="toggleAddProductFormBtn" style="background-color: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">+ Adicionar Item</button>
+            </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ID Venda</th>
+                        <th>ID da Associação</th>
                         <th>Produto</th>
                         <th>Qtd.</th>
                         <th>Val. Unit.</th>
                         <th>Val. Total</th>
-                        <th>Data</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody id="clientAssociatedProductsBody">
                     <tr>
-                        <td colspan="7">Nenhum produto associado.</td>
+                        <td colspan="6">Nenhum produto associado.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-
-
-
 
     <script src="/public/js/adicionar_produtos.js"></script>
 </body>
