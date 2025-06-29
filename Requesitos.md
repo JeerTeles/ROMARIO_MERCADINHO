@@ -20,6 +20,7 @@ Não exibir os campos id, editar e excluir da pagina de consultas [OK]
 Adicionar o campo divida na pagina de consultas
 Tirar os botões da tabela cliente encontrado front-end
 tirar os botões editar cleinte e excluir cliente da tabela cleinete encontrado 
+tira a parte de baixo da consulta (que contem no pagina adicionar produtos)
 
 --------- Adicionar produtos ------
 Pesquisar cliente por nome em adicionar produtos
