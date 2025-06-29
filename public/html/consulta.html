@@ -31,13 +31,17 @@
     <div class="container">
         <div class="registration-form">
             <h2>Pesquisar Cliente</h2>
-            <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
-            <button id="searchCpfBtn">Pesquisar por CPF</button>
+            <div class="search-group">
+                <input type="text" id="searchCpf" placeholder="Digite o CPF para pesquisar" maxlength="11">
+                <button id="searchCpfBtn">Pesquisar por CPF</button>
+            </div>
             
             <hr>
 
-            <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
-            <button id="searchNameBtn">Pesquisar por Nome</button>
+            <div class="search-group">
+                <input type="text" id="searchName" placeholder="Digite o Nome para pesquisar">
+                <button id="searchNameBtn">Pesquisar por Nome</button>
+            </div>
 
             <div id="searchResultMessage"></div>
         </div>
@@ -81,18 +85,17 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID Venda</th>
+                        <th>ID da Associação</th>
                         <th>Produto</th>
                         <th>Qtd.</th>
                         <th>Val. Unit.</th>
                         <th>Val. Total</th>
-                        <th>Data</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody id="clientAssociatedProductsBody">
                     <tr>
-                        <td colspan="7">Nenhum produto associado.</td>
+                        <td colspan="6">Nenhum produto associado.</td>
                     </tr>
                 </tbody>
             </table>
