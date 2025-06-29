@@ -1,7 +1,7 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs'); // Certifique-se de ter 'bcryptjs' instalado (npm install bcryptjs)
 
 const app = express();
 const PORT = 3000;
@@ -32,14 +32,12 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             telefone TEXT NOT NULL,
             cpf TEXT UNIQUE NOT NULL,
             divida REAL DEFAULT 0.0,
-            itens_associados TEXT DEFAULT '[]' -- Armazenará um JSON array de {produto_nome, quantidade, preco_venda_unitario}
+            itens_associados TEXT DEFAULT '[]' -- Armazenará um JSON array de {id_interno, produto_id, nome, quantidade, preco_venda_unitario}
         )`, (err) => {
             if (err) { console.error('Erro ao criar tabela "clientes":', err.message); } else { console.log('Tabela "clientes" criada ou já existe.'); }
         });
 
-        // Tabela 'cliente_produtos' REMOVIDA (pois será substituída por itens_associados no clientes)
-
-        // Tabela 'produtos_registrados' (mantida como estava)
+        // Tabela 'produtos_registrados' (para registro de vendas históricas)
         db.run(`CREATE TABLE IF NOT EXISTS produtos_registrados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente_id INTEGER NOT NULL,
@@ -53,7 +51,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) { console.error('Erro ao criar tabela "produtos_registrados":', err.message); } else { console.log('Tabela "produtos_registrados" criada ou já existe.'); }
         });
 
-        // Tabela 'estoque' (existente)
+        // Tabela 'estoque'
         db.run(`CREATE TABLE IF NOT EXISTS estoque (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             produto TEXT NOT NULL UNIQUE,
@@ -64,7 +62,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) { console.error('Erro ao criar tabela "estoque":', err.message); } else { console.log('Tabela "estoque" criada ou já existe.'); }
         });
 
-        // Tabela 'administrador' (existente, para verificação de senha)
+        // Tabela 'administrador'
         db.run(`CREATE TABLE IF NOT EXISTS administrador (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             senha_hash TEXT NOT NULL
@@ -106,7 +104,6 @@ app.get('/api/clientes', (req, res) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
         totalClients = row.count;
 
-        // Selecionando itens_associados
         const sql = `
             SELECT 
                 id, nomeCliente, telefone, cpf, divida, itens_associados
@@ -178,7 +175,7 @@ app.put('/api/clientes/:id', (req, res) => {
     // Busca o cliente atual para obter o valor de itens_associados se não for fornecido no body
     db.get('SELECT itens_associados FROM clientes WHERE id = ?', [id], (err, currentClient) => {
         if (err) { res.status(500).json({ error: err.message }); return; }
-        if (!currentClient) { res.status(404).json({ error: 'Cliente não encontrado.' }); return; }
+        if (!currentClient) { return res.status(404).json({ message: 'Cliente não encontrado.' }); }
 
         // Use o itens_associados do body se for uma string JSON válida, caso contrário, preserve o do banco de dados
         const updatedItensAssociados = (typeof itens_associados === 'string' && (itens_associados.startsWith('[') && itens_associados.endsWith(']')))
@@ -196,9 +193,181 @@ app.put('/api/clientes/:id', (req, res) => {
             }
         );
     });
-})
+});
 
-// --- NOVAS ROTAS PARA GERENCIAR ITENS ASSOCIADOS AO CLIENTE (diretamente no campo 'itens_associados') ---
+app.delete('/api/clientes/:id', (req, res) => {
+    const { id } = req.params;
+    db.run(`DELETE FROM clientes WHERE id = ?`, id, function (err) {
+        if (err) { res.status(500).json({ error: err.message }); return; }
+        if (this.changes === 0) { res.status(404).json({ error: 'Cliente não encontrado.' }); } else { res.json({ message: 'Cliente excluído com sucesso.' }); }
+    });
+});
+
+// --- Rota API: Verificação de Senha do Administrador ---
+app.post('/api/admin/verify-password', (req, res) => {
+    const { password } = req.body;
+
+    if (!password) { return res.status(400).json({ message: 'Senha é obrigatória.' }); }
+
+    db.get('SELECT senha_hash FROM administrador LIMIT 1', (err, row) => {
+        if (err) { console.error('Erro ao buscar hash da senha:', err.message); return res.status(500).json({ message: 'Erro interno do servidor.' }); }
+        if (!row) { return res.status(500).json({ message: 'Nenhuma senha de administrador configurada.' }); }
+
+        bcrypt.compare(password, row.senha_hash, (err, result) => {
+            if (err) { console.error('Erro ao comparar senhas:', err); return res.status(500).json({ message: 'Erro na comparação de senha.' }); }
+            if (result) { res.status(200).json({ message: 'Senha correta.' }); } else { res.status(401).json({ message: 'Senha incorreta.' }); }
+        });
+    });
+});
+
+// --- Rotas da API para Produtos Registrados (Vendas Históricas) ---
+app.post('/api/produtos-registrados', (req, res) => {
+    const { cpfCliente, nome_item, quantidade, valor_unitario } = req.body;
+
+    if (!cpfCliente || !nome_item || !quantidade || !valor_unitario) {
+        return res.status(400).json({ error: 'Todos os campos (CPF do Cliente, Item, Quantidade, Valor Unitário) são obrigatórios.' });
+    }
+
+    if (quantidade <= 0 || valor_unitario <= 0) {
+        return res.status(400).json({ error: 'Quantidade e Valor Unitário devem ser maiores que zero.' });
+    }
+
+    // Primeiro, encontra o ID do cliente pelo CPF
+    db.get('SELECT id FROM clientes WHERE cpf = ?', [cpfCliente], (err, clientRow) => {
+        if (err) {
+            console.error("Erro ao buscar cliente por CPF em produtos-registrados:", err.message);
+            res.status(500).json({ error: "Erro ao registrar produto: problema com a busca do cliente." });
+            return;
+        }
+        if (!clientRow) {
+            res.status(404).json({ error: 'Cliente com CPF não encontrado. Cadastre o cliente primeiro.' });
+            return;
+        }
+
+        const cliente_id = clientRow.id;
+        const valor_total = quantidade * valor_unitario;
+        const data_registro = new Date().toISOString(); // Data e hora atual
+
+        db.run(`INSERT INTO produtos_registrados (cliente_id, nome_item, quantidade, valor_unitario, valor_total, data_registro) VALUES (?, ?, ?, ?, ?, ?)`,
+            [cliente_id, nome_item, quantidade, valor_unitario, valor_total, data_registro],
+            function (err) {
+                if (err) {
+                    console.error("Erro ao inserir produto registrado:", err.message);
+                    res.status(500).json({ error: "Erro ao inserir produto registrado." });
+                    return;
+                }
+                res.status(201).json({ id: this.lastID, ...req.body, cliente_id, valor_total, data_registro });
+            }
+        );
+    });
+});
+
+// GET: Obter todos os produtos registrados (para exibição na página adicionar_produtos.html)
+app.get('/api/produtos-registrados', (req, res) => {
+    const sql = `
+        SELECT
+            pr.id,
+            pr.nome_item,
+            pr.quantidade,
+            pr.valor_unitario,
+            pr.valor_total,
+            pr.data_registro,
+            c.nomeCliente,
+            c.cpf
+        FROM produtos_registrados pr
+        JOIN clientes c ON pr.cliente_id = c.id
+        ORDER BY pr.data_registro DESC
+        LIMIT 20
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.error("Erro ao buscar produtos registrados:", err.message);
+            res.status(500).json({ error: "Erro ao buscar produtos registrados." });
+            return;
+        }
+        res.json(rows);
+    });
+});
+
+
+// --- Rotas da API para Estoque ---
+// Obter lista simples de produtos do estoque (id, produto, precoDeVenda) para selects
+app.get('/api/estoque/list-for-select', (req, res) => {
+    db.all('SELECT id, produto, precoDeVenda FROM estoque ORDER BY produto ASC', [], (err, rows) => {
+        if (err) { res.status(500).json({ error: err.message }); return; }
+        res.json(rows);
+    });
+});
+app.get('/api/estoque', (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    let totalItems = 0;
+    db.get('SELECT COUNT(*) AS count FROM estoque', [], (err, row) => {
+        if (err) { res.status(500).json({ error: err.message }); return; }
+        totalItems = row.count;
+        db.all('SELECT * FROM estoque LIMIT ? OFFSET ?', [limit, offset], (err, rows) => {
+            if (err) { res.status(500).json({ error: err.message }); return; }
+            res.json({ data: rows, currentPage: page, perPage: limit, totalItems: totalItems, totalPages: Math.ceil(totalItems / limit) });
+        });
+    });
+});
+app.post('/api/estoque', (req, res) => {
+    const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
+
+    if (!produto || quantidade === undefined || precoDeCompra === undefined || precoDeVenda === undefined) {
+        return res.status(400).json({ error: 'Todos os campos (Produto, Quantidade, Preço de Compra, Preço de Venda) são obrigatórios.' });
+    }
+    if (quantidade < 0 || precoDeCompra < 0 || precoDeVenda < 0) {
+        return res.status(400).json({ error: 'Valores de Quantidade, Preço de Compra e Preço de Venda não podem ser negativos.' });
+    }
+
+    db.run(`INSERT INTO estoque (produto, quantidade, precoDeCompra, precoDeVenda) VALUES (?, ?, ?, ?)`,
+        [produto, quantidade, precoDeCompra, precoDeVenda],
+        function (err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed: estoque.produto')) {
+                    return res.status(409).json({ error: 'Produto com este nome já existe no estoque.' });
+                }
+                res.status(201).json({ id: this.lastID, ...req.body });
+            }
+        }
+    );
+});
+app.put('/api/estoque/:id', (req, res) => {
+    const { id } = req.params;
+    const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
+
+    if (!produto || quantidade === undefined || precoDeCompra === undefined || precoDeVenda === undefined) {
+        return res.status(400).json({ error: 'Todos os campos (Produto, Quantidade, Preço de Compra, Preço de Venda) são obrigatórios.' });
+    }
+    if (quantidade < 0 || precoDeCompra < 0 || precoDeVenda < 0) {
+        return res.status(400).json({ error: 'Valores de Quantidade, Preço de Compra e Preço de Venda não podem ser negativos.' });
+    }
+
+    db.run(`UPDATE estoque SET produto = ?, quantidade = ?, precoDeCompra = ?, precoDeVenda = ? WHERE id = ?`,
+        [produto, quantidade, precoDeCompra, precoDeVenda, id],
+        function (err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed: estoque.produto')) {
+                    return res.status(409).json({ error: 'Produto com este nome já existe no estoque.' });
+                }
+                res.status(500).json({ error: err.message }); return;
+            }
+            if (this.changes === 0) { res.status(404).json({ error: 'Item de estoque não encontrado.' }); } else { res.json({ message: 'Item de estoque atualizado com sucesso.' }); }
+        }
+    );
+});
+app.delete('/api/estoque/:id', (req, res) => {
+    const { id } = req.params;
+
+    db.run(`DELETE FROM estoque WHERE id = ?`, id, function (err) {
+        if (err) { res.status(500).json({ error: err.message }); return; }
+        if (this.changes === 0) { res.status(404).json({ error: 'Item de estoque não encontrado.' }); } else { res.json({ message: 'Item de estoque excluído com sucesso.' }); }
+    });
+});
+
+// --- Rotas para GERENCIAR ITENS ASSOCIADOS AO CLIENTE (diretamente no campo 'itens_associados') ---
 
 // POST: Adicionar um item à lista de itens_associados de um cliente
 app.post('/api/clientes/:id/itens', (req, res) => {
@@ -229,7 +398,6 @@ app.post('/api/clientes/:id/itens', (req, res) => {
 
             const newItem = {
                 // Geramos um ID único para o item dentro do array (timestamp)
-                // Isso é para que possamos remover itens individualmente do array
                 id: Date.now(), 
                 produto_id: productRow.id, // Guarda o ID do estoque para referência, se necessário
                 nome: productRow.produto,
@@ -248,7 +416,6 @@ app.post('/api/clientes/:id/itens', (req, res) => {
         });
     });
 });
-
 
 // DELETE: Remover um item da lista itens_associados de um cliente
 app.delete('/api/clientes/:cliente_id/itens/:item_id_in_array', (req, res) => {
@@ -289,207 +456,8 @@ app.delete('/api/clientes/:cliente_id/itens/:item_id_in_array', (req, res) => {
 });
 
 
-// Fim da implementação teste
-
-app.delete('/api/clientes/:id', (req, res) => {
-    const { id } = req.params;
-    db.run(`DELETE FROM clientes WHERE id = ?`, id, function (err) {
-        if (err) { res.status(500).json({ error: err.message }); return; }
-        if (this.changes === 0) { res.status(404).json({ error: 'Cliente não encontrado.' }); } else { res.json({ message: 'Cliente excluído com sucesso.' }); }
-    });
-});
-
-// --- Rota API: Verificação de Senha do Administrador ---
-app.post('/api/admin/verify-password', (req, res) => {
-    const { password } = req.body;
-
-    if (!password) { return res.status(400).json({ message: 'Senha é obrigatória.' }); }
-
-    db.get('SELECT senha_hash FROM administrador LIMIT 1', (err, row) => {
-        if (err) { console.error('Erro ao buscar hash da senha:', err.message); return res.status(500).json({ message: 'Erro interno do servidor.' }); }
-        if (!row) { return res.status(500).json({ message: 'Nenhuma senha de administrador configurada.' }); }
-
-        bcrypt.compare(password, row.senha_hash, (err, result) => {
-            if (err) { console.error('Erro ao comparar senhas:', err); return res.status(500).json({ message: 'Erro na comparação de senha.' }); }
-            if (result) { res.status(200).json({ message: 'Senha correta.' }); } else { res.status(401).json({ message: 'Senha incorreta.' }); }
-        });
-    });
-});
-
-// MODIFICADA: POST para adicionar produto registrado
-app.post('/api/produtos-registrados', (req, res) => {
-    // Agora o frontend envia 'produto_id_estoque' (o ID do item selecionado do estoque)
-    const { cpfCliente, produto_id_estoque, quantidade } = req.body;
-
-    if (!cpfCliente || !produto_id_estoque || !quantidade) {
-        return res.status(400).json({ error: 'Todos os campos (CPF do Cliente, Produto, Quantidade) são obrigatórios.' });
-    }
-    if (quantidade <= 0) {
-        return res.status(400).json({ error: 'Quantidade deve ser maior que zero.' });
-    }
-
-    // 1. Encontra o ID do cliente pelo CPF
-    db.get('SELECT id FROM clientes WHERE cpf = ?', [cpfCliente], (err, clientRow) => {
-        if (err) {
-            console.error("Erro ao buscar cliente por CPF em produtos-registrados:", err.message);
-            res.status(500).json({ error: "Erro ao registrar produto: problema com a busca do cliente." });
-            return;
-        }
-        if (!clientRow) {
-            res.status(404).json({ error: 'Cliente com CPF não encontrado. Cadastre o cliente primeiro.' });
-            return;
-        }
-
-        const cliente_id = clientRow.id;
-
-        // 2. Busca os detalhes do produto do estoque pelo produto_id_estoque
-        db.get('SELECT produto, precoDeVenda FROM estoque WHERE id = ?', [produto_id_estoque], (err, productRow) => {
-            if (err) {
-                console.error("Erro ao buscar produto do estoque:", err.message);
-                res.status(500).json({ error: "Erro ao registrar produto: problema com a busca do item no estoque." });
-                return;
-            }
-            if (!productRow) {
-                res.status(404).json({ error: 'Produto selecionado não encontrado no estoque.' });
-                return;
-            }
-
-            const nome_item = productRow.produto;       // Nome do produto do estoque
-            const valor_unitario = productRow.precoDeVenda; // Preço de venda do estoque
-            const valor_total = quantidade * valor_unitario;
-            const data_registro = new Date().toISOString();
-
-            // 3. Insere na tabela produtos_registrados
-            db.run(`INSERT INTO produtos_registrados (cliente_id, nome_item, quantidade, valor_unitario, valor_total, data_registro) VALUES (?, ?, ?, ?, ?, ?)`,
-                [cliente_id, nome_item, quantidade, valor_unitario, valor_total, data_registro],
-                function (err) {
-                    if (err) {
-                        console.error("Erro ao inserir produto registrado:", err.message);
-                        res.status(500).json({ error: "Erro ao inserir produto registrado." });
-                        return;
-                    }
-                    res.status(201).json({ id: this.lastID, cliente_id, nome_item, quantidade, valor_unitario, valor_total, data_registro });
-                }
-            );
-        });
-    });
-});
-
-
-// GET: Obter todos os produtos registrados (para exibição na página adicionar_produtos.html)
-app.get('/api/produtos-registrados', (req, res) => {
-    // JOIN com a tabela clientes para trazer os dados do cliente também
-    const sql = `
-        SELECT
-            pr.id,
-            pr.nome_item,
-            pr.quantidade,
-            pr.valor_unitario,
-            pr.valor_total,
-            pr.data_registro,
-            c.nomeCliente,
-            c.cpf
-        FROM produtos_registrados pr
-        JOIN clientes c ON pr.cliente_id = c.id
-        ORDER BY pr.data_registro DESC
-        LIMIT 20 -- Limitar para mostrar apenas os últimos 20, por exemplo
-    `;
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            console.error("Erro ao buscar produtos registrados:", err.message);
-            res.status(500).json({ error: "Erro ao buscar produtos registrados." });
-            return;
-        }
-        res.json(rows);
-    });
-});
-
-
-// --- Rotas da API para Estoque ---
-app.get('/api/estoque/list-for-select', (req, res) => {
-    db.all('SELECT id, produto FROM estoque ORDER BY produto ASC', [], (err, rows) => {
-        if (err) { res.status(500).json({ error: err.message }); return; }
-        res.json(rows);
-    });
-});
-// Rota GET /api/estoque já configurada para paginação na última atualização
-app.get('/api/estoque', (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-    let totalItems = 0;
-    db.get('SELECT COUNT(*) AS count FROM estoque', [], (err, row) => {
-        if (err) { res.status(500).json({ error: err.message }); return; }
-        totalItems = row.count;
-        db.all('SELECT * FROM estoque LIMIT ? OFFSET ?', [limit, offset], (err, rows) => {
-            if (err) { res.status(500).json({ error: err.message }); return; }
-            res.json({ data: rows, currentPage: page, perPage: limit, totalItems: totalItems, totalPages: Math.ceil(totalItems / limit) });
-        });
-    });
-});
-app.post('/api/estoque', (req, res) => {
-    const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
-
-    if (!produto || quantidade === undefined || precoDeCompra === undefined || precoDeVenda === undefined) {
-        return res.status(400).json({ error: 'Todos os campos (Produto, Quantidade, Preço de Compra, Preço de Venda) são obrigatórios.' });
-    }
-    if (quantidade < 0 || precoDeCompra < 0 || precoDeVenda < 0) {
-        return res.status(400).json({ error: 'Valores de Quantidade, Preço de Compra e Preço de Venda não podem ser negativos.' });
-    }
-
-    db.run(`INSERT INTO estoque (produto, quantidade, precoDeCompra, precoDeVenda) VALUES (?, ?, ?, ?)`,
-        [produto, quantidade, precoDeCompra, precoDeVenda],
-        function (err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed: estoque.produto')) {
-                    return res.status(409).json({ error: 'Produto com este nome já existe no estoque.' });
-                }
-                res.status(500).json({ error: err.message }); return;
-            }
-            res.status(201).json({ id: this.lastID, ...req.body });
-        }
-    );
-});
-app.put('/api/estoque/:id', (req, res) => {
-    const { id } = req.params;
-    const { produto, quantidade, precoDeCompra, precoDeVenda } = req.body;
-
-    if (!produto || quantidade === undefined || precoDeCompra === undefined || precoDeVenda === undefined) {
-        return res.status(400).json({ error: 'Todos os campos (Produto, Quantidade, Preço de Compra, Preço de Venda) são obrigatórios.' });
-    }
-    if (quantidade < 0 || precoDeCompra < 0 || precoDeVenda < 0) {
-        return res.status(400).json({ error: 'Valores de Quantidade, Preço de Compra e Preço de Venda não podem ser negativos.' });
-    }
-
-    db.run(`UPDATE estoque SET produto = ?, quantidade = ?, precoDeCompra = ?, precoDeVenda = ? WHERE id = ?`,
-        [produto, quantidade, precoDeCompra, precoDeVenda, id],
-        function (err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed: estoque.produto')) {
-                    return res.status(409).json({ error: 'Produto com este nome já existe no estoque.' });
-                }
-                res.status(500).json({ error: err.message }); return;
-            }
-            if (this.changes === 0) { res.status(404).json({ error: 'Item de estoque não encontrado.' }); } else { res.json({ message: 'Item de estoque atualizado com sucesso.' }); }
-        }
-    );
-});
-app.delete('/api/estoque/:id', (req, res) => {
-    const { id } = req.params;
-
-    db.run(`DELETE FROM estoque WHERE id = ?`, id, function (err) {
-        if (err) { res.status(500).json({ error: err.message }); return; }
-        if (this.changes === 0) { res.status(404).json({ error: 'Item de estoque não encontrado.' }); } else { res.json({ message: 'Item de estoque excluído com sucesso.' }); }
-    });
-});
-
-// --- Rotas para a Tabela 'cliente_produtos' ---
-app.post('/api/cliente-produtos', (req, res) => { /* ... */ });
-app.get('/api/clientes/:cliente_id/produtos', (req, res) => { /* ... */ });
-app.delete('/api/cliente-produtos/:id', (req, res) => { /* ... */ });
-
-
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
