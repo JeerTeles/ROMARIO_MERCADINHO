@@ -254,6 +254,13 @@ document.addEventListener('DOMContentLoaded', () => {
             precoCompraCell.textContent = item.precoDeCompra.toFixed(2);
             row.appendChild(precoCompraCell);
 
+            // teste despesa 
+            /*const despesaCell = precoCompraCell * produtoQuantidadeInput;
+            despesaCell = document.createElement('td');
+            despesaCell.textContent = item.despesa.toFixed(2);
+            row.appendChild(despesaCell);*/
+            // teste despesa
+
             const precoVendaCell = document.createElement('td');
             precoVendaCell.textContent = item.precoDeVenda.toFixed(2);
             row.appendChild(precoVendaCell);

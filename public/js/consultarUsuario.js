@@ -99,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let clientHtml = `
             <div class="client-info">
-                <p><strong>ID:</strong> ${client.id}</p>
                 <p><strong>Nome:</strong> ${client.nomeCliente}</p>
                 <p><strong>Telefone:</strong> ${client.telefone}</p>
                 <p><strong>CPF:</strong> ${client.cpf}</p>
