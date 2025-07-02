@@ -34,7 +34,7 @@ o batão excluir na tabela front-end clente encontrado  será o botão diminuir 
 data em que o otem foi associado ao cliente 
 
 -------- Estoque-------------
-Função pesquisar por nome no tabela intens em estoque 
+Função pesquisar por nome no tabela itens em estoque 
 Paginação na tabela itens em estoque 
 Exibir apenas dez itens da tabela
 Não exibir a campo id na tabela itens de estoque
