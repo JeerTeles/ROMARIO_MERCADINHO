@@ -17,8 +17,8 @@ Passa o campo pesquisar cliente por cpf [OK]
 Mudar mensagem de cliente cadastrado com sucesso [OK]
 Não exibir os campos id, editar da pagina de consultas [OK]
 Adicionar o campo divida geral na pagina de consultas [OK]
-tirar a parte de baixo da consulta (que contem no pagina adicionar produtos)
-Retornar cliente não encontrado quando a pesquis não for bem sucedida
+tirar a parte de baixo da consulta (que contem no pagina adicionar produtos) [Ok]
+Retornar cliente não encontrado quando a pesquisa não for bem sucedida [OK]
 
 --------- Adicionar produtos ------
 Pesquisar cliente por nome em adicionar produtos [OK]
