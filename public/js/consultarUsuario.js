@@ -136,8 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // NOVO BOTÃO "Adicionar Item ao Cliente" AQUI
         clientHtml += `
-                <button id="addItemToClientDirectBtn" style="background-color: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Adicionar Item ao Cliente</button>
-                <button class="delete-client-btn" data-client-id="${client.id}">Excluir Cliente</button>
+                <button id="addItemToClientDirectBtn" style="background-color: #007bff; display: none; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Adicionar Item ao Cliente</button>
+                <button class="delete-client-btn" style="display: none;"  data-client-id="${client.id}">Excluir Cliente</button>
             </div>
             <hr>
         `;
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error(`Erro ao pesquisar cliente por ${type}:`, error);
             searchResultMessage.style.color = 'red';
-            searchResultMessage.textContent = `Erro ao pesquisar cliente: ${error.message}`;
+            searchResultMessage.textContent = `Erro ao pesquisar cliente não encontrado!`;
             renderClientDetails([]);
         }
     }
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                throw new Error(errorData.error || `Cliente não existe: ${response.status}`);
             }
 
             alert('Item adicionado ao cliente com sucesso!');
