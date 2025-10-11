@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><strong>Nome:</strong> ${client.nomeCliente}</p>
                 <p><strong>Telefone:</strong> ${client.telefone}</p>
                 <p><strong>CPF:</strong> ${client.cpf}</p>
-                <p><strong>Dívida Geral:</strong> R$ ${client.divida.toFixed(2)}</p>
+                <p style="color: red;"><strong>Dívida Geral:</strong> R$ ${client.divida.toFixed(2)}</p>
         `;
 
         let associatedItems = [];
