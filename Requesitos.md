@@ -3,7 +3,11 @@ colocar verificação pra  telefone [OK]
 Passar todos os dados sensiveis para o .env
 Aplicar media query
 aplicar verificação para cpf [OK]
-colocar o valor de dividas na cor vemelha
+colocar o valor de dividas na cor vemelha [Ok]
+Colocar senhas em: Botões: Editar e excluir / clientes cadastrados []
+Colocar senhas em: Botões: Adicionar itens ao clientes, Pagar valor /Adicionar produtos []
+Colocar senhas em: Botões: Editar e excluir / Itens de estoques []
+
 
 ------ Cadastro --------
 Adicionar CPF chave primary key [OK]
@@ -24,7 +28,7 @@ Retornar cliente não encontrado quando a pesquisa não for bem sucedida [OK]
 Pesquisar cliente por nome em adicionar produtos [OK]
 adicionar os campos divida na tabela Produtos Registrados na pagina adicionar produtos [OK]
 Mudar titulo de (Pesquisar Cliente) para (Pesquisar cliente para add itens) na pagina adicionar produtos
-o botão excluir na tabela front-end cliente encontrado  será o botão diminuir divida 
+o botão excluir na tabela front-end cliente encontrado  será o botão pagar valor
 data em que o otem foi associado ao cliente 
 
 -------- Estoque-------------

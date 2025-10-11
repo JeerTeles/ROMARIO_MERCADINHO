@@ -188,7 +188,7 @@ app.get('/api/clientes/nome/:nome', (req, res) => {
     });
 });
 
-// MODIFICADA: Adicionar um novo cliente (com validação de CPF)
+// MODIFICADA: Adicionar um novo cliente (com validação de CPF) 
 app.post('/api/clientes', (req, res) => {
     let { nomeCliente, telefone, cpf, divida } = req.body;
 
@@ -227,9 +227,9 @@ app.put('/api/clientes/:id', (req, res) => {
 
     if (!nomeCliente || !telefone || !cpf) { return res.status(400).json({ error: 'Os campos obrigatórios (Nome, Telefone, CPF) são necessários.' }); }
     if (!isValidBrazilianPhone(telefone)) { return res.status(400).json({ error: 'Formato de telefone inválido. Use DDD + 8 ou 9 dígitos (somente números).' }); }
-    if (!isValidCPF(cpf)) { // Nova validação de CPF
+    /*if (!isValidCPF(cpf)) { // Nova validação de CPF
         return res.status(400).json({ error: 'Formato de CPF inválido ou CPF não é real.' });
-    }
+    }*/
     if (isNaN(divida) || divida < 0) { return res.status(400).json({ error: 'Dívida deve ser um número não negativo válido.' }); }
 
     db.get('SELECT itens_associados FROM clientes WHERE id = ?', [id], (err, currentClient) => {
